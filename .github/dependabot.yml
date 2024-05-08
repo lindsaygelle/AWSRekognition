@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    reviewers:
+      - "lindsaygelle"
+    schedule:
+      day: "monday"
+      interval: "weekly"
+      time: "09:00"
+      timezone: "Australia/Sydney"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    reviewers:
+      - "lindsaygelle"
+    schedule:
+      day: "monday"
+      interval: "weekly"
+      time: "09:00"
+      timezone: "Australia/Sydney"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    reviewers:
+      - "lindsaygelle"
+    schedule:
+      interval: "weekly"
+      time: "09:00"
+      timezone: "Australia/Sydney"

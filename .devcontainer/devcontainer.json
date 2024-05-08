@@ -1,0 +1,42 @@
+{
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "GitHub.vscode-pull-request-github",
+                "VisualStudioExptTeam.intellicode-api-usage-examples",
+                "VisualStudioExptTeam.vscodeintellicode",
+                "eamodio.gitlens",
+                "github.vscode-github-actions",
+                "hashicorp.terraform",
+                "ms-azuretools.vscode-docker",
+                "ms-vscode.makefile-tools",
+                "ms-vscode-remote.remote-containers",
+                "redhat.vscode-yaml"
+            ],
+            "settings": {
+                "[makefile]": {
+                    "editor.insertSpaces": true,
+                    "editor.tabSize": 4
+                },
+                "[terraform]": {
+                    "editor.insertSpaces": true,
+                    "editor.tabSize": 2
+                },
+                "[velocity]": {
+                    "editor.insertSpaces": true,
+                    "editor.tabSize": 2
+                },
+                "editor.formatOnSaveMode": "file"
+            }
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/aws-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/terraform:1": {
+            "version": "latest"
+        }
+    },
+    "image": "mcr.microsoft.com/devcontainers/universal:latest"
+}
