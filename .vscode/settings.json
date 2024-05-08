@@ -1,0 +1,17 @@
+{
+    "settings": {
+        "[makefile]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 4
+        },
+        "[terraform]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 2
+        },
+        "[velocity]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 2
+        },
+        "editor.formatOnSaveMode": "file"
+    }
+}
