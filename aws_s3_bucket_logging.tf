@@ -7,5 +7,5 @@ resource "aws_s3_bucket_logging" "main" {
       partition_date_source = "EventTime"
     }
   }
-  target_prefix = aws_s3_object.log.key
+  target_prefix = aws_s3_object.logs.key
 }
