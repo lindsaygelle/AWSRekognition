@@ -1,0 +1,179 @@
+{
+    "StartAt": "ProcessSQSEvent",
+    "States": {
+        "ProcessSQSEvent": {
+            "Type": "Map",
+            "ItemProcessor": {
+                "ProcessorConfig": {
+                    "Mode": "INLINE"
+                },
+                "StartAt": "ParseSQSEventBody",
+                "States": {
+                    "ParseSQSEventBody": {
+                        "Type": "Pass",
+                        "Parameters": {
+                            "body.$": "States.StringToJson($.body)"
+                        },
+                        "Next": "CheckSQSBodyRecords"
+                    },
+                    "CheckSQSBodyRecords": {
+                        "Type": "Choice",
+                        "Choices": [
+                            {
+                                "Variable": "$.body.Records",
+                                "IsPresent": true,
+                                "Next": "ProcessSQSBodyRecordsAndPass"
+                            }
+                        ],
+                        "Default": "InvalidSQSBody"
+                    },
+                    "InvalidSQSBody": {
+                        "Type": "Pass",
+                        "End": true
+                    },
+                    "ProcessSQSBodyRecordsAndPass": {
+                        "Type": "Parallel",
+                        "End": true,
+                        "Branches": [
+                            {
+                                "StartAt": "ProcessSQSBodyRecords",
+                                "States": {
+                                    "ProcessSQSBodyRecords": {
+                                        "Type": "Map",
+                                        "ItemProcessor": {
+                                            "ProcessorConfig": {
+                                                "Mode": "INLINE"
+                                            },
+                                            "StartAt": "Parallel",
+                                            "States": {
+                                                "Parallel": {
+                                                    "Type": "Parallel",
+                                                    "Branches": [
+                                                        {
+                                                            "StartAt": "Choice",
+                                                            "States": {
+                                                                "Choice": {
+                                                                    "Type": "Choice",
+                                                                    "Choices": [
+                                                                        {
+                                                                            "Variable": "$.eventName",
+                                                                            "StringEquals": "ObjectCreated:Put",
+                                                                            "Next": "ParallelSQSRecordEvent"
+                                                                        }
+                                                                    ],
+                                                                    "Default": "InvalidSQSRecordEvent"
+                                                                },
+                                                                "ParallelSQSRecordEvent": {
+                                                                    "Type": "Parallel",
+                                                                    "Branches": [
+                                                                        {
+                                                                            "StartAt": "PassSQSRecord",
+                                                                            "States": {
+                                                                                "PassSQSRecord": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "S3GetObjectSQSRecord",
+                                                                            "States": {
+                                                                                "S3GetObjectSQSRecord": {
+                                                                                    "Type": "Task",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "Bucket.$": "$.s3.bucket.name",
+                                                                                        "Key.$": "$.s3.object.key"
+                                                                                    },
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:s3:getObject"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "ResultSelector": {
+                                                                        "awsRegion.$": "$[0].awsRegion",
+                                                                        "eventName.$": "$[0].eventName",
+                                                                        "eventSource.$": "$[0].eventSource",
+                                                                        "eventTime.$": "$[0].eventTime",
+                                                                        "eventVersion.$": "$[0].eventVersion",
+                                                                        "requestParameters.$": "$[0].requestParameters",
+                                                                        "s3": {
+                                                                            "bucket.$": "$[0].s3.bucket",
+                                                                            "configurationId.$": "$[0].s3.configurationId",
+                                                                            "object": {
+                                                                                "body.$": "$[1].Body",
+                                                                                "acceptRanges.$": "$[1].AcceptRanges",
+                                                                                "contentLength.$": "$[1].ContentLength",
+                                                                                "contentType.$": "$[1].ContentType",
+                                                                                "eTag.$": "$[0].s3.object.eTag",
+                                                                                "key.$": "$[0].s3.object.key",
+                                                                                "lastModified.$": "$[1].LastModified",
+                                                                                "metadata.$": "$[1].Metadata",
+                                                                                "serverSideEncryption.$": "$[1].ServerSideEncryption"
+                                                                            },
+                                                                            "s3SchemaVersion.$": "$[0].s3.s3SchemaVersion"
+                                                                        },
+                                                                        "userIdentity.$": "$[0].userIdentity"
+                                                                    },
+                                                                    "Next": "Pass"
+                                                                },
+                                                                "Pass": {
+                                                                    "Type": "Pass",
+                                                                    "End": true
+                                                                },
+                                                                "InvalidSQSRecordEvent": {
+                                                                    "Type": "Pass",
+                                                                    "End": true
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "StartAt": "PutObjectSQSBodyRecord",
+                                                            "States": {
+                                                                "PutObjectSQSBodyRecord": {
+                                                                    "Type": "Task",
+                                                                    "End": true,
+                                                                    "Parameters": {
+                                                                        "Body.$": "$",
+                                                                        "Bucket.$": "$.s3.bucket.name",
+                                                                        "Key.$": "States.Format('${aws_s3_object_s3_bucket_notification}event_name={}/{}.json', $.eventName, $.messageId)"
+                                                                    },
+                                                                    "Resource": "arn:aws:states:::aws-sdk:s3:putObject"
+                                                                }
+                                                            }
+                                                        }
+                                                    ],
+                                                    "End": true
+                                                }
+                                            }
+                                        },
+                                        "End": true,
+                                        "ItemsPath": "$.body.Records",
+                                        "ItemSelector": {
+                                            "attributes.$": "$.attributes",
+                                            "awsRegion.$": "$$.Map.Item.Value.awsRegion",
+                                            "eventName.$": "$$.Map.Item.Value.eventName",
+                                            "eventSource.$": "$$.Map.Item.Value.eventSource",
+                                            "eventTime.$": "$$.Map.Item.Value.eventTime",
+                                            "eventVersion.$": "$$.Map.Item.Value.eventVersion",
+                                            "index.$": "$$.Map.Item.Index",
+                                            "messageAttributes.$": "$.messageAttributes",
+                                            "md5OfBody.$": "$.md5OfBody",
+                                            "messageId.$": "$.messageId",
+                                            "receiptHandle.$": "$.receiptHandle",
+                                            "requestParameters.$": "$$.Map.Item.Value.requestParameters",
+                                            "responseElements.$": "$$.Map.Item.Value.responseElements",
+                                            "s3.$": "$$.Map.Item.Value.s3",
+                                            "userIdentity.$": "$$.Map.Item.Value.userIdentity"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            "End": true
+        }
+    }
+}
