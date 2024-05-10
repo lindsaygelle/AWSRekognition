@@ -50,8 +50,16 @@ data "aws_iam_policy_document" "pipes_pipe_s3_object_created_images" {
 data "aws_iam_policy_document" "sfn_state_machine_s3_object_created_images" {
   statement {
     actions = [
-      "S3:GetObject",
-      "S3:GetObjectVersion"
+      "s3:GetObject",
+      "s3:GetObjectAcl",
+      "s3:GetObjectAttributes",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionAcl",
+      "s3:GetObjectVersionAttributes",
+      "s3:GetObjectVersionForReplication",
+      "s3:GetObjectVersionTagging",
+      "s3:GetObjectVersionTorrent",
     ]
     effect = "Allow"
     resources = [
