@@ -12,7 +12,15 @@
                     "ParseSQSEventBody": {
                         "Type": "Pass",
                         "Parameters": {
-                            "body.$": "States.StringToJson($.body)"
+                            "awsRegion.$": "$.awsRegion",
+                            "attributes.$": "$.attributes",
+                            "body.$": "States.StringToJson($.body)",
+                            "eventSource.$": "$.eventSource",
+                            "eventSourceARN.$": "$.eventSourceARN",
+                            "md5OfBody.$": "$.md5OfBody",
+                            "messageAttributes.$": "$.messageAttributes",
+                            "messageId.$": "$.messageId",
+                            "receiptHandle.$": "$.receiptHandle"
                         },
                         "Next": "CheckSQSBodyRecords"
                     },
@@ -22,7 +30,7 @@
                             {
                                 "Variable": "$.body.Records",
                                 "IsPresent": true,
-                                "Next": "ProcessSQSBodyRecordsAndPass"
+                                "Next": "ParallelSQSBodyRecords"
                             }
                         ],
                         "Default": "InvalidSQSBody"
@@ -31,7 +39,7 @@
                         "Type": "Pass",
                         "End": true
                     },
-                    "ProcessSQSBodyRecordsAndPass": {
+                    "ParallelSQSBodyRecords": {
                         "Type": "Parallel",
                         "End": true,
                         "Branches": [
@@ -44,84 +52,72 @@
                                             "ProcessorConfig": {
                                                 "Mode": "INLINE"
                                             },
-                                            "StartAt": "Parallel",
+                                            "StartAt": "ParallelSQSBodyRecord",
                                             "States": {
-                                                "Parallel": {
+                                                "ParallelSQSBodyRecord": {
                                                     "Type": "Parallel",
                                                     "Branches": [
                                                         {
-                                                            "StartAt": "Choice",
+                                                            "StartAt": "CheckSQSBodyRecordEventName",
                                                             "States": {
-                                                                "Choice": {
+                                                                "CheckSQSBodyRecordEventName": {
                                                                     "Type": "Choice",
                                                                     "Choices": [
                                                                         {
-                                                                            "Variable": "$.eventName",
-                                                                            "StringEquals": "ObjectCreated:Put",
-                                                                            "Next": "ParallelSQSRecordEvent"
+                                                                            "Or": [
+                                                                                {
+                                                                                    "Variable": "$.eventName",
+                                                                                    "StringEquals": "ObjectCreated:Put"
+                                                                                },
+                                                                                {
+                                                                                    "Variable": "$.eventName",
+                                                                                    "StringEquals": "ObjectCreated:Post"
+                                                                                },
+                                                                                {
+                                                                                    "Variable": "$.eventName",
+                                                                                    "StringEquals": "ObjectCreated:Copy"
+                                                                                },
+                                                                                {
+                                                                                    "Variable": "$.eventName",
+                                                                                    "StringEquals": "ObjectCreated:CompleteMultipartUpload"
+                                                                                }
+                                                                            ],
+                                                                            "Next": "ParallelRekognition"
                                                                         }
                                                                     ],
-                                                                    "Default": "InvalidSQSRecordEvent"
+                                                                    "Default": "InvalidSQSBodyRecordEventName"
                                                                 },
-                                                                "ParallelSQSRecordEvent": {
+                                                                "ParallelRekognition": {
                                                                     "Type": "Parallel",
+                                                                    "End": true,
                                                                     "Branches": [
                                                                         {
-                                                                            "StartAt": "PassSQSRecord",
+                                                                            "StartAt": "RekognitionDetectLabels",
                                                                             "States": {
-                                                                                "PassSQSRecord": {
-                                                                                    "Type": "Pass",
-                                                                                    "End": true
-                                                                                }
-                                                                            }
-                                                                        },
-                                                                        {
-                                                                            "StartAt": "S3GetObjectSQSRecord",
-                                                                            "States": {
-                                                                                "S3GetObjectSQSRecord": {
+                                                                                "RekognitionDetectLabels": {
                                                                                     "Type": "Task",
                                                                                     "End": true,
                                                                                     "Parameters": {
-                                                                                        "Bucket.$": "$.s3.bucket.name",
-                                                                                        "Key.$": "$.s3.object.key"
+                                                                                        "Features": [
+                                                                                            "GENERAL_LABELS",
+                                                                                            "IMAGE_PROPERTIES"
+                                                                                        ],
+                                                                                        "Image": {
+                                                                                            "S3Object": {
+                                                                                                "Bucket.$": "$.s3.bucket.name",
+                                                                                                "Name.$": "$.s3.object.key"
+                                                                                            }
+                                                                                        },
+                                                                                        "MaxLabels": 0,
+                                                                                        "MinConfidence": 50
                                                                                     },
-                                                                                    "Resource": "arn:aws:states:::aws-sdk:s3:getObject"
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels"
                                                                                 }
                                                                             }
                                                                         }
-                                                                    ],
-                                                                    "ResultSelector": {
-                                                                        "awsRegion.$": "$[0].awsRegion",
-                                                                        "eventName.$": "$[0].eventName",
-                                                                        "eventSource.$": "$[0].eventSource",
-                                                                        "eventTime.$": "$[0].eventTime",
-                                                                        "eventVersion.$": "$[0].eventVersion",
-                                                                        "requestParameters.$": "$[0].requestParameters",
-                                                                        "s3": {
-                                                                            "bucket.$": "$[0].s3.bucket",
-                                                                            "configurationId.$": "$[0].s3.configurationId",
-                                                                            "object": {
-                                                                                "body.$": "$[1].Body",
-                                                                                "acceptRanges.$": "$[1].AcceptRanges",
-                                                                                "contentLength.$": "$[1].ContentLength",
-                                                                                "contentType.$": "$[1].ContentType",
-                                                                                "eTag.$": "$[0].s3.object.eTag",
-                                                                                "key.$": "$[0].s3.object.key",
-                                                                                "lastModified.$": "$[1].LastModified",
-                                                                                "metadata.$": "$[1].Metadata",
-                                                                                "serverSideEncryption.$": "$[1].ServerSideEncryption"
-                                                                            },
-                                                                            "s3SchemaVersion.$": "$[0].s3.s3SchemaVersion"
-                                                                        },
-                                                                        "userIdentity.$": "$[0].userIdentity"
-                                                                    },
-                                                                    "Next": "Pass"
+                                                                    ]
                                                                 },
-                                                                "Pass": {
-                                                                    "Type": "Pass",
-                                                                    "End": true
-                                                                },
-                                                                "InvalidSQSRecordEvent": {
+                                                                "InvalidSQSBodyRecordEventName": {
                                                                     "Type": "Pass",
                                                                     "End": true
                                                                 }

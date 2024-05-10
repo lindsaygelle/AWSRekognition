@@ -13,3 +13,11 @@ resource "aws_s3_bucket_metric" "logs" {
   }
   name = trimsuffix(replace(aws_s3_object.logs.key, "/", "-"), "-")
 }
+
+resource "aws_s3_bucket_metric" "s3_bucket_notification" {
+  bucket = aws_s3_bucket.main.bucket
+  filter {
+    prefix = aws_s3_object.s3_bucket_notification.key
+  }
+  name = trimsuffix(replace(aws_s3_object.s3_bucket_notification.key, "/", "-"), "-")
+}
