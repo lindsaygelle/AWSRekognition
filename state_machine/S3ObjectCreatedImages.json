@@ -92,11 +92,10 @@
                                                                     "End": true,
                                                                     "Branches": [
                                                                         {
-                                                                            "StartAt": "RekognitionDetectLabels",
+                                                                            "StartAt": "DetectLabels",
                                                                             "States": {
-                                                                                "RekognitionDetectLabels": {
+                                                                                "DetectLabels": {
                                                                                     "Type": "Task",
-                                                                                    "End": true,
                                                                                     "Parameters": {
                                                                                         "Features": [
                                                                                             "GENERAL_LABELS",
@@ -111,16 +110,454 @@
                                                                                         "MaxLabels": 0,
                                                                                         "MinConfidence": 50
                                                                                     },
-                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels"
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels",
+                                                                                    "Catch": [
+                                                                                        {
+                                                                                            "ErrorEquals": [
+                                                                                                "States.TaskFailed"
+                                                                                            ],
+                                                                                            "Next": "ParallelCatchDetectLabels"
+                                                                                        }
+                                                                                    ],
+                                                                                    "Next": "ParallelDetectLabels"
+                                                                                },
+                                                                                "ParallelCatchDetectLabels": {
+                                                                                    "Type": "Parallel",
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "CatchDetectLabelsPass",
+                                                                                            "States": {
+                                                                                                "CatchDetectLabelsPass": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true,
+                                                                                                    "Result": {}
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ],
+                                                                                    "End": true,
+                                                                                    "ResultSelector": {},
+                                                                                    "Parameters": {
+                                                                                        "image_properties": {}
+                                                                                    }
+                                                                                },
+                                                                                "ParallelDetectLabels": {
+                                                                                    "Type": "Parallel",
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassDetectLabels",
+                                                                                            "States": {
+                                                                                                "PassDetectLabels": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "ParallelDetectLabelsImageProperties",
+                                                                                            "States": {
+                                                                                                "ParallelDetectLabelsImageProperties": {
+                                                                                                    "Type": "Parallel",
+                                                                                                    "End": true,
+                                                                                                    "Branches": [
+                                                                                                        {
+                                                                                                            "StartAt": "ParallelImagePropertiesBackground",
+                                                                                                            "States": {
+                                                                                                                "ParallelImagePropertiesBackground": {
+                                                                                                                    "Type": "Parallel",
+                                                                                                                    "End": true,
+                                                                                                                    "Branches": [
+                                                                                                                        {
+                                                                                                                            "StartAt": "MapImagePropertiesBackgroundDominantColors",
+                                                                                                                            "States": {
+                                                                                                                                "MapImagePropertiesBackgroundDominantColors": {
+                                                                                                                                    "Type": "Map",
+                                                                                                                                    "ItemProcessor": {
+                                                                                                                                        "ProcessorConfig": {
+                                                                                                                                            "Mode": "INLINE"
+                                                                                                                                        },
+                                                                                                                                        "StartAt": "PassImagePropertiesBackgroundDominantColors",
+                                                                                                                                        "States": {
+                                                                                                                                            "PassImagePropertiesBackgroundDominantColors": {
+                                                                                                                                                "Type": "Pass",
+                                                                                                                                                "End": true
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    },
+                                                                                                                                    "End": true,
+                                                                                                                                    "ItemsPath": "$.DominantColors",
+                                                                                                                                    "ItemSelector": {
+                                                                                                                                        "blue.$": "$$.Map.Item.Value.Blue",
+                                                                                                                                        "css_color.$": "$$.Map.Item.Value.CssColor",
+                                                                                                                                        "green.$": "$$.Map.Item.Value.Green",
+                                                                                                                                        "hex_code.$": "$$.Map.Item.Value.HexCode",
+                                                                                                                                        "pixel_percent.$": "$$.Map.Item.Value.PixelPercent",
+                                                                                                                                        "red.$": "$$.Map.Item.Value.Red",
+                                                                                                                                        "simplified_color.$": "$$.Map.Item.Value.SimplifiedColor"
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "StartAt": "PassImagePropertiesBackgroundQuality",
+                                                                                                                            "States": {
+                                                                                                                                "PassImagePropertiesBackgroundQuality": {
+                                                                                                                                    "Type": "Pass",
+                                                                                                                                    "End": true,
+                                                                                                                                    "InputPath": "$.Quality",
+                                                                                                                                    "Parameters": {
+                                                                                                                                        "brightness.$": "$.Brightness",
+                                                                                                                                        "sharpness.$": "$.Sharpness"
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    ],
+                                                                                                                    "InputPath": "$.Background",
+                                                                                                                    "ResultSelector": {
+                                                                                                                        "dominant_colors.$": "$[0]",
+                                                                                                                        "quality.$": "$[1]"
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "StartAt": "MapImagePropertiesDominantColors",
+                                                                                                            "States": {
+                                                                                                                "MapImagePropertiesDominantColors": {
+                                                                                                                    "Type": "Map",
+                                                                                                                    "ItemProcessor": {
+                                                                                                                        "ProcessorConfig": {
+                                                                                                                            "Mode": "INLINE"
+                                                                                                                        },
+                                                                                                                        "StartAt": "PassImagePropertiesDominantColors",
+                                                                                                                        "States": {
+                                                                                                                            "PassImagePropertiesDominantColors": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    "End": true,
+                                                                                                                    "ItemsPath": "$.DominantColors",
+                                                                                                                    "ItemSelector": {
+                                                                                                                        "blue.$": "$$.Map.Item.Value.Blue",
+                                                                                                                        "css_color.$": "$$.Map.Item.Value.CssColor",
+                                                                                                                        "green.$": "$$.Map.Item.Value.Green",
+                                                                                                                        "hex_code.$": "$$.Map.Item.Value.HexCode",
+                                                                                                                        "pixel_percent.$": "$$.Map.Item.Value.PixelPercent",
+                                                                                                                        "red.$": "$$.Map.Item.Value.Red",
+                                                                                                                        "simplified_color.$": "$$.Map.Item.Value.SimplifiedColor"
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "StartAt": "ParallelImagePropertiesForeground",
+                                                                                                            "States": {
+                                                                                                                "ParallelImagePropertiesForeground": {
+                                                                                                                    "Type": "Parallel",
+                                                                                                                    "End": true,
+                                                                                                                    "Branches": [
+                                                                                                                        {
+                                                                                                                            "StartAt": "MapImagePropertiesForegroundDominantColors",
+                                                                                                                            "States": {
+                                                                                                                                "MapImagePropertiesForegroundDominantColors": {
+                                                                                                                                    "Type": "Map",
+                                                                                                                                    "ItemProcessor": {
+                                                                                                                                        "ProcessorConfig": {
+                                                                                                                                            "Mode": "INLINE"
+                                                                                                                                        },
+                                                                                                                                        "StartAt": "PassImagePropertiesForegroundDominantColors",
+                                                                                                                                        "States": {
+                                                                                                                                            "PassImagePropertiesForegroundDominantColors": {
+                                                                                                                                                "Type": "Pass",
+                                                                                                                                                "End": true
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    },
+                                                                                                                                    "End": true,
+                                                                                                                                    "ItemsPath": "$.DominantColors",
+                                                                                                                                    "ItemSelector": {
+                                                                                                                                        "blue.$": "$$.Map.Item.Value.Blue",
+                                                                                                                                        "css_color.$": "$$.Map.Item.Value.CssColor",
+                                                                                                                                        "green.$": "$$.Map.Item.Value.Green",
+                                                                                                                                        "hex_code.$": "$$.Map.Item.Value.HexCode",
+                                                                                                                                        "pixel_percent.$": "$$.Map.Item.Value.PixelPercent",
+                                                                                                                                        "red.$": "$$.Map.Item.Value.Red",
+                                                                                                                                        "simplified_color.$": "$$.Map.Item.Value.SimplifiedColor"
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "StartAt": "PassImagePropertiesForegroundQuality",
+                                                                                                                            "States": {
+                                                                                                                                "PassImagePropertiesForegroundQuality": {
+                                                                                                                                    "Type": "Pass",
+                                                                                                                                    "End": true,
+                                                                                                                                    "InputPath": "$.Quality",
+                                                                                                                                    "Parameters": {
+                                                                                                                                        "brightness.$": "$.Brightness",
+                                                                                                                                        "sharpness.$": "$.Sharpness"
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    ],
+                                                                                                                    "InputPath": "$.Foreground",
+                                                                                                                    "ResultSelector": {
+                                                                                                                        "dominant_colors.$": "$[0]",
+                                                                                                                        "quality.$": "$[1]"
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "StartAt": "PassImagePropertiesQuality",
+                                                                                                            "States": {
+                                                                                                                "PassImagePropertiesQuality": {
+                                                                                                                    "Type": "Pass",
+                                                                                                                    "End": true,
+                                                                                                                    "InputPath": "$.Quality",
+                                                                                                                    "Parameters": {
+                                                                                                                        "brightness.$": "$.Brightness",
+                                                                                                                        "contrast.$": "$.Contrast",
+                                                                                                                        "sharpness.$": "$.Sharpness"
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "InputPath": "$.ImageProperties",
+                                                                                                    "ResultSelector": {
+                                                                                                        "background.$": "$[0]",
+                                                                                                        "dominant_colors.$": "$[1]",
+                                                                                                        "foreground.$": "$[2]",
+                                                                                                        "quality.$": "$[3]"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "MapDetectLabelsLabels",
+                                                                                            "States": {
+                                                                                                "MapDetectLabelsLabels": {
+                                                                                                    "Type": "Map",
+                                                                                                    "ItemProcessor": {
+                                                                                                        "ProcessorConfig": {
+                                                                                                            "Mode": "INLINE"
+                                                                                                        },
+                                                                                                        "StartAt": "ParallelLabels",
+                                                                                                        "States": {
+                                                                                                            "ParallelLabels": {
+                                                                                                                "Type": "Parallel",
+                                                                                                                "End": true,
+                                                                                                                "Branches": [
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassLabels",
+                                                                                                                        "States": {
+                                                                                                                            "PassLabels": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "name.$": "$.Name"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "MapLabelsAliases",
+                                                                                                                        "States": {
+                                                                                                                            "MapLabelsAliases": {
+                                                                                                                                "Type": "Map",
+                                                                                                                                "ItemProcessor": {
+                                                                                                                                    "ProcessorConfig": {
+                                                                                                                                        "Mode": "INLINE"
+                                                                                                                                    },
+                                                                                                                                    "StartAt": "PassLabelsAliases",
+                                                                                                                                    "States": {
+                                                                                                                                        "PassLabelsAliases": {
+                                                                                                                                            "Type": "Pass",
+                                                                                                                                            "End": true
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                },
+                                                                                                                                "End": true,
+                                                                                                                                "ItemsPath": "$.Aliases",
+                                                                                                                                "ItemSelector": {
+                                                                                                                                    "name.$": "$$.Map.Item.Value.Name"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "MapLabelsCategories",
+                                                                                                                        "States": {
+                                                                                                                            "MapLabelsCategories": {
+                                                                                                                                "Type": "Map",
+                                                                                                                                "ItemProcessor": {
+                                                                                                                                    "ProcessorConfig": {
+                                                                                                                                        "Mode": "INLINE"
+                                                                                                                                    },
+                                                                                                                                    "StartAt": "PassLabelsCategories",
+                                                                                                                                    "States": {
+                                                                                                                                        "PassLabelsCategories": {
+                                                                                                                                            "Type": "Pass",
+                                                                                                                                            "End": true
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                },
+                                                                                                                                "End": true,
+                                                                                                                                "ItemsPath": "$.Categories",
+                                                                                                                                "ItemSelector": {
+                                                                                                                                    "name.$": "$$.Map.Item.Value.Name"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "MapLabelsInstances",
+                                                                                                                        "States": {
+                                                                                                                            "MapLabelsInstances": {
+                                                                                                                                "Type": "Map",
+                                                                                                                                "ItemProcessor": {
+                                                                                                                                    "ProcessorConfig": {
+                                                                                                                                        "Mode": "INLINE"
+                                                                                                                                    },
+                                                                                                                                    "StartAt": "ParallelLabelsInstances",
+                                                                                                                                    "States": {
+                                                                                                                                        "ParallelLabelsInstances": {
+                                                                                                                                            "Type": "Parallel",
+                                                                                                                                            "End": true,
+                                                                                                                                            "Branches": [
+                                                                                                                                                {
+                                                                                                                                                    "StartAt": "PassLabelsInstances",
+                                                                                                                                                    "States": {
+                                                                                                                                                        "PassLabelsInstances": {
+                                                                                                                                                            "Type": "Pass",
+                                                                                                                                                            "End": true
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "StartAt": "PassLabelsBoundingBox",
+                                                                                                                                                    "States": {
+                                                                                                                                                        "PassLabelsBoundingBox": {
+                                                                                                                                                            "Type": "Pass",
+                                                                                                                                                            "End": true,
+                                                                                                                                                            "InputPath": "$.BoundingBox",
+                                                                                                                                                            "Parameters": {
+                                                                                                                                                                "height.$": "$.Height",
+                                                                                                                                                                "left.$": "$.Left",
+                                                                                                                                                                "top.$": "$.Top",
+                                                                                                                                                                "width.$": "$.Width"
+                                                                                                                                                            }
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "StartAt": "MapLabelsDominantColors",
+                                                                                                                                                    "States": {
+                                                                                                                                                        "MapLabelsDominantColors": {
+                                                                                                                                                            "Type": "Map",
+                                                                                                                                                            "ItemProcessor": {
+                                                                                                                                                                "ProcessorConfig": {
+                                                                                                                                                                    "Mode": "INLINE"
+                                                                                                                                                                },
+                                                                                                                                                                "StartAt": "PassLabelsDominantColors",
+                                                                                                                                                                "States": {
+                                                                                                                                                                    "PassLabelsDominantColors": {
+                                                                                                                                                                        "Type": "Pass",
+                                                                                                                                                                        "End": true
+                                                                                                                                                                    }
+                                                                                                                                                                }
+                                                                                                                                                            },
+                                                                                                                                                            "End": true,
+                                                                                                                                                            "ItemsPath": "$.DominantColors",
+                                                                                                                                                            "ItemSelector": {
+                                                                                                                                                                "blue.$": "$$.Map.Item.Value.Blue",
+                                                                                                                                                                "css_color.$": "$$.Map.Item.Value.CssColor",
+                                                                                                                                                                "green.$": "$$.Map.Item.Value.Green",
+                                                                                                                                                                "hex_code.$": "$$.Map.Item.Value.HexCode",
+                                                                                                                                                                "pixel_percent.$": "$$.Map.Item.Value.PixelPercent",
+                                                                                                                                                                "red.$": "$$.Map.Item.Value.Red",
+                                                                                                                                                                "simplified_color.$": "$$.Map.Item.Value.SimplifiedColor"
+                                                                                                                                                            }
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                }
+                                                                                                                                            ],
+                                                                                                                                            "ResultSelector": {
+                                                                                                                                                "bounding_boxes.$": "$[1]",
+                                                                                                                                                "confidence.$": "$[0].Confidence"
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                },
+                                                                                                                                "End": true,
+                                                                                                                                "ItemsPath": "$.Instances"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "MapLabelsParents",
+                                                                                                                        "States": {
+                                                                                                                            "MapLabelsParents": {
+                                                                                                                                "Type": "Map",
+                                                                                                                                "ItemProcessor": {
+                                                                                                                                    "ProcessorConfig": {
+                                                                                                                                        "Mode": "INLINE"
+                                                                                                                                    },
+                                                                                                                                    "StartAt": "PassLabelsParents",
+                                                                                                                                    "States": {
+                                                                                                                                        "PassLabelsParents": {
+                                                                                                                                            "Type": "Pass",
+                                                                                                                                            "End": true
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                },
+                                                                                                                                "End": true,
+                                                                                                                                "ItemsPath": "$.Parents",
+                                                                                                                                "ItemSelector": {
+                                                                                                                                    "name.$": "$$.Map.Item.Value.Name"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                                "ResultSelector": {
+                                                                                                                    "aliases.$": "$[1]",
+                                                                                                                    "categories.$": "$[2]",
+                                                                                                                    "confidence.$": "$[0].confidence",
+                                                                                                                    "instances.$": "$[3]",
+                                                                                                                    "name.$": "$[0].name",
+                                                                                                                    "parents.$": "$[4]"
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "End": true,
+                                                                                                    "ItemsPath": "$.Labels"
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ],
+                                                                                    "End": true,
+                                                                                    "ResultSelector": {
+                                                                                        "image_properties.$": "$[1]",
+                                                                                        "label_model_version.$": "$[0].LabelModelVersion",
+                                                                                        "labels.$": "$[2]"
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         },
                                                                         {
-                                                                            "StartAt": "RekognitionDetectFaces",
+                                                                            "StartAt": "DetectFaces",
                                                                             "States": {
-                                                                                "RekognitionDetectFaces": {
+                                                                                "DetectFaces": {
                                                                                     "Type": "Task",
-                                                                                    "End": true,
                                                                                     "Parameters": {
                                                                                         "Attributes": [
                                                                                             "ALL"
@@ -132,7 +569,361 @@
                                                                                             }
                                                                                         }
                                                                                     },
-                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectFaces"
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectFaces",
+                                                                                    "Next": "ParallelDetectFaces",
+                                                                                    "Catch": [
+                                                                                        {
+                                                                                            "ErrorEquals": [
+                                                                                                "States.TaskFailed"
+                                                                                            ],
+                                                                                            "Next": "ParallelCatchDetectFaces"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "ParallelCatchDetectFaces": {
+                                                                                    "Type": "Parallel",
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassCatchDetectFaces",
+                                                                                            "States": {
+                                                                                                "PassCatchDetectFaces": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ],
+                                                                                    "End": true
+                                                                                },
+                                                                                "ParallelDetectFaces": {
+                                                                                    "Type": "Parallel",
+                                                                                    "End": true,
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassDetectFaces",
+                                                                                            "States": {
+                                                                                                "PassDetectFaces": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true,
+                                                                                                    "Parameters": {
+                                                                                                        "orientation_correction": "$.OrientationCorrection"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "MapDetectFacesFaceDetails",
+                                                                                            "States": {
+                                                                                                "MapDetectFacesFaceDetails": {
+                                                                                                    "Type": "Map",
+                                                                                                    "ItemProcessor": {
+                                                                                                        "ProcessorConfig": {
+                                                                                                            "Mode": "INLINE"
+                                                                                                        },
+                                                                                                        "StartAt": "ParallelFaceDetails",
+                                                                                                        "States": {
+                                                                                                            "ParallelFaceDetails": {
+                                                                                                                "Type": "Parallel",
+                                                                                                                "End": true,
+                                                                                                                "Branches": [
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetails",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetails": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsAgeRange",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsAgeRange": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "InputPath": "$.AgeRange",
+                                                                                                                                "Parameters": {
+                                                                                                                                    "high.$": "$.High",
+                                                                                                                                    "low.$": "$.Low"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsBeard",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsBeard": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "InputPath": "$.Beard",
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsBoundingBox",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsBoundingBox": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "InputPath": "$.BoundingBox",
+                                                                                                                                "Parameters": {
+                                                                                                                                    "height.$": "$.Height",
+                                                                                                                                    "left.$": "$.Left",
+                                                                                                                                    "top.$": "$.Top",
+                                                                                                                                    "width.$": "$.Width"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "MapFaceDetailsEmotions",
+                                                                                                                        "States": {
+                                                                                                                            "MapFaceDetailsEmotions": {
+                                                                                                                                "Type": "Map",
+                                                                                                                                "ItemProcessor": {
+                                                                                                                                    "ProcessorConfig": {
+                                                                                                                                        "Mode": "INLINE"
+                                                                                                                                    },
+                                                                                                                                    "StartAt": "PassFaceDetailsEmotions",
+                                                                                                                                    "States": {
+                                                                                                                                        "PassFaceDetailsEmotions": {
+                                                                                                                                            "Type": "Pass",
+                                                                                                                                            "End": true
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                },
+                                                                                                                                "End": true,
+                                                                                                                                "ItemsPath": "$.Emotions",
+                                                                                                                                "ItemSelector": {
+                                                                                                                                    "confidence.$": "$$.Map.Item.Value.Confidence",
+                                                                                                                                    "type.$": "$$.Map.Item.Value.Type"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsEyeDirection",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsEyeDirection": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "InputPath": "$.EyeDirection",
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "pitch.$": "$.Pitch",
+                                                                                                                                    "yaw.$": "$.Yaw"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsEyeglasses",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsEyeglasses": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.Eyeglasses"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsEyesOpen",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsEyesOpen": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.EyesOpen"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsFaceOccluded",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsFaceOccluded": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.FaceOccluded"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsGender",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsGender": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.Gender"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "MapFaceDetailsLandmarks",
+                                                                                                                        "States": {
+                                                                                                                            "MapFaceDetailsLandmarks": {
+                                                                                                                                "Type": "Map",
+                                                                                                                                "ItemProcessor": {
+                                                                                                                                    "ProcessorConfig": {
+                                                                                                                                        "Mode": "INLINE"
+                                                                                                                                    },
+                                                                                                                                    "StartAt": "PassFaceDetailsLandmarks",
+                                                                                                                                    "States": {
+                                                                                                                                        "PassFaceDetailsLandmarks": {
+                                                                                                                                            "Type": "Pass",
+                                                                                                                                            "End": true
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                },
+                                                                                                                                "End": true,
+                                                                                                                                "ItemsPath": "$.Landmarks",
+                                                                                                                                "ItemSelector": {
+                                                                                                                                    "type.$": "$$.Map.Item.Value.Type",
+                                                                                                                                    "x.$": "$$.Map.Item.Value.X",
+                                                                                                                                    "y.$": "$$.Map.Item.Value.Y"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsMouthOpen",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsMouthOpen": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.MouthOpen"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsMustache",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsMustache": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.Mustache"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsPose",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsPose": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "pitch.$": "$.Pitch",
+                                                                                                                                    "roll.$": "$.Roll",
+                                                                                                                                    "yaw.$": "$.Yaw"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.Pose"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsQuality",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsQuality": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "brightness.$": "$.Brightness",
+                                                                                                                                    "sharpness.$": "$.Sharpness"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.Quality"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsSmile",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsSmile": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.Smile"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassFaceDetailsSunglasses",
+                                                                                                                        "States": {
+                                                                                                                            "PassFaceDetailsSunglasses": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "value.$": "$.Value"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.Sunglasses"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                                "ResultSelector": {
+                                                                                                                    "age_range.$": "$[1]",
+                                                                                                                    "beard.$": "$[2]",
+                                                                                                                    "bounding_box.$": "$[3]",
+                                                                                                                    "confidence.$": "$[0].confidence",
+                                                                                                                    "emotions.$": "$[4]",
+                                                                                                                    "eye_direction.$": "$[5]",
+                                                                                                                    "eye_glasses.$": "$[6]",
+                                                                                                                    "eyes_opened.$": "$[7]",
+                                                                                                                    "face_occluded.$": "$[8]",
+                                                                                                                    "gender.$": "$[9]",
+                                                                                                                    "landmarks.$": "$[10]",
+                                                                                                                    "mouth_open.$": "$[11]",
+                                                                                                                    "mustache.$": "$[12]",
+                                                                                                                    "pose.$": "$[13]",
+                                                                                                                    "quality.$": "$[14]",
+                                                                                                                    "smile.$": "$[15]",
+                                                                                                                    "sunglasses.$": "$[16]"
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "End": true,
+                                                                                                    "ItemsPath": "$.FaceDetails"
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ],
+                                                                                    "ResultSelector": {
+                                                                                        "face_details.$": "$[1]",
+                                                                                        "orientation_correction": "$[0].orientation_correction"
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         },
@@ -141,7 +932,6 @@
                                                                             "States": {
                                                                                 "DetectModerationLabels": {
                                                                                     "Type": "Task",
-                                                                                    "End": true,
                                                                                     "Parameters": {
                                                                                         "Image": {
                                                                                             "S3Object": {
@@ -151,7 +941,46 @@
                                                                                         },
                                                                                         "MinConfidence": 50
                                                                                     },
-                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectModerationLabels"
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectModerationLabels",
+                                                                                    "Next": "ParallelDetectModerationLabels",
+                                                                                    "Catch": [
+                                                                                        {
+                                                                                            "ErrorEquals": [
+                                                                                                "States.TaskFailed"
+                                                                                            ],
+                                                                                            "Next": "ParallelCatchDetectModerationLabels"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "ParallelCatchDetectModerationLabels": {
+                                                                                    "Type": "Parallel",
+                                                                                    "End": true,
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassCatchDetectModerationLabels",
+                                                                                            "States": {
+                                                                                                "PassCatchDetectModerationLabels": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "ParallelDetectModerationLabels": {
+                                                                                    "Type": "Parallel",
+                                                                                    "End": true,
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassDetectModerationLabels",
+                                                                                            "States": {
+                                                                                                "PassDetectModerationLabels": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ]
                                                                                 }
                                                                             }
                                                                         },
@@ -160,7 +989,6 @@
                                                                             "States": {
                                                                                 "DetectProtectiveEquipment": {
                                                                                     "Type": "Task",
-                                                                                    "End": true,
                                                                                     "Parameters": {
                                                                                         "Image": {
                                                                                             "S3Object": {
@@ -177,7 +1005,46 @@
                                                                                             ]
                                                                                         }
                                                                                     },
-                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectProtectiveEquipment"
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectProtectiveEquipment",
+                                                                                    "Next": "ParallelDetectProtectiveEquipment",
+                                                                                    "Catch": [
+                                                                                        {
+                                                                                            "ErrorEquals": [
+                                                                                                "States.TaskFailed"
+                                                                                            ],
+                                                                                            "Next": "ParallelCatchDetectProtectiveEquipment"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "ParallelCatchDetectProtectiveEquipment": {
+                                                                                    "Type": "Parallel",
+                                                                                    "End": true,
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassCatchDetectProtectiveEquipment",
+                                                                                            "States": {
+                                                                                                "PassCatchDetectProtectiveEquipment": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "ParallelDetectProtectiveEquipment": {
+                                                                                    "Type": "Parallel",
+                                                                                    "End": true,
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassDetectProtectiveEquipment",
+                                                                                            "States": {
+                                                                                                "PassDetectProtectiveEquipment": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ]
                                                                                 }
                                                                             }
                                                                         },
@@ -186,7 +1053,6 @@
                                                                             "States": {
                                                                                 "DetectText": {
                                                                                     "Type": "Task",
-                                                                                    "End": true,
                                                                                     "Parameters": {
                                                                                         "Image": {
                                                                                             "S3Object": {
@@ -195,7 +1061,46 @@
                                                                                             }
                                                                                         }
                                                                                     },
-                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectText"
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectText",
+                                                                                    "Next": "ParallelDetectText",
+                                                                                    "Catch": [
+                                                                                        {
+                                                                                            "ErrorEquals": [
+                                                                                                "States.TaskFailed"
+                                                                                            ],
+                                                                                            "Next": "ParallelCatchDetectText"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "ParallelCatchDetectText": {
+                                                                                    "Type": "Parallel",
+                                                                                    "End": true,
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassCatchDetectText",
+                                                                                            "States": {
+                                                                                                "PassCatchDetectText": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "ParallelDetectText": {
+                                                                                    "Type": "Parallel",
+                                                                                    "End": true,
+                                                                                    "Branches": [
+                                                                                        {
+                                                                                            "StartAt": "PassDetectText",
+                                                                                            "States": {
+                                                                                                "PassDetectText": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    ]
                                                                                 }
                                                                             }
                                                                         }
