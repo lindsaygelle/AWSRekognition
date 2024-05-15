@@ -114,6 +114,90 @@
                                                                                     "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels"
                                                                                 }
                                                                             }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "RekognitionDetectFaces",
+                                                                            "States": {
+                                                                                "RekognitionDetectFaces": {
+                                                                                    "Type": "Task",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "Attributes": [
+                                                                                            "ALL"
+                                                                                        ],
+                                                                                        "Image": {
+                                                                                            "S3Object": {
+                                                                                                "Bucket.$": "$.s3.bucket.name",
+                                                                                                "Name.$": "$.s3.object.key"
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectFaces"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "DetectModerationLabels",
+                                                                            "States": {
+                                                                                "DetectModerationLabels": {
+                                                                                    "Type": "Task",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "Image": {
+                                                                                            "S3Object": {
+                                                                                                "Bucket.$": "$.s3.bucket.name",
+                                                                                                "Name.$": "$.s3.object.key"
+                                                                                            }
+                                                                                        },
+                                                                                        "MinConfidence": 50
+                                                                                    },
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectModerationLabels"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "DetectProtectiveEquipment",
+                                                                            "States": {
+                                                                                "DetectProtectiveEquipment": {
+                                                                                    "Type": "Task",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "Image": {
+                                                                                            "S3Object": {
+                                                                                                "Bucket.$": "$.s3.bucket.name",
+                                                                                                "Name.$": "$.s3.object.key"
+                                                                                            }
+                                                                                        },
+                                                                                        "SummarizationAttributes": {
+                                                                                            "MinConfidence": 50,
+                                                                                            "RequiredEquipmentTypes": [
+                                                                                                "FACE_COVER",
+                                                                                                "HAND_COVER",
+                                                                                                "HEAD_COVER"
+                                                                                            ]
+                                                                                        }
+                                                                                    },
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectProtectiveEquipment"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "DetectText",
+                                                                            "States": {
+                                                                                "DetectText": {
+                                                                                    "Type": "Task",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "Image": {
+                                                                                            "S3Object": {
+                                                                                                "Bucket.$": "$.s3.bucket.name",
+                                                                                                "Name.$": "$.s3.object.key"
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    "Resource": "arn:aws:states:::aws-sdk:rekognition:detectText"
+                                                                                }
+                                                                            }
                                                                         }
                                                                     ]
                                                                 },
@@ -132,7 +216,7 @@
                                                                     "Parameters": {
                                                                         "Body.$": "$",
                                                                         "Bucket.$": "$.s3.bucket.name",
-                                                                        "Key.$": "States.Format('${aws_s3_object_s3_bucket_notification}event_name={}/{}.json', $.eventName, $.messageId)"
+                                                                        "Key.$": "States.Format('${aws_s3_object_s3_bucket_notification}event={}/year={}/month={}/day={}/{}.json', $.eventName, States.ArrayGetItem(States.StringSplit($.eventDate, '-'), 0), States.ArrayGetItem(States.StringSplit($.eventDate, '-'), 1), States.ArrayGetItem(States.StringSplit($.eventDate, '-'), 2), $.messageId)"
                                                                     },
                                                                     "Resource": "arn:aws:states:::aws-sdk:s3:putObject"
                                                                 }
@@ -148,9 +232,11 @@
                                         "ItemSelector": {
                                             "attributes.$": "$.attributes",
                                             "awsRegion.$": "$$.Map.Item.Value.awsRegion",
+                                            "eventDate.$": "States.ArrayGetItem(States.StringSplit($$.Map.Item.Value.eventTime, 'T'), 0)",
                                             "eventName.$": "$$.Map.Item.Value.eventName",
                                             "eventSource.$": "$$.Map.Item.Value.eventSource",
                                             "eventTime.$": "$$.Map.Item.Value.eventTime",
+                                            "eventTimestamp.$": "States.ArrayGetItem(States.StringSplit($$.Map.Item.Value.eventTime, 'T'), 1)",
                                             "eventVersion.$": "$$.Map.Item.Value.eventVersion",
                                             "index.$": "$$.Map.Item.Index",
                                             "messageAttributes.$": "$.messageAttributes",
