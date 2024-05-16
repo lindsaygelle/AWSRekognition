@@ -600,13 +600,31 @@
                                                                                     "End": true,
                                                                                     "Branches": [
                                                                                         {
-                                                                                            "StartAt": "PassDetectFaces",
+                                                                                            "StartAt": "ChoiceDetectFacesOrientationCorrection",
                                                                                             "States": {
+                                                                                                "ChoiceDetectFacesOrientationCorrection": {
+                                                                                                    "Type": "Choice",
+                                                                                                    "Choices": [
+                                                                                                        {
+                                                                                                            "Variable": "$.OrientationCorrection",
+                                                                                                            "IsPresent": true,
+                                                                                                            "Next": "PassDetectFaces"
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "Default": "DefaultDetectFacesOrientationCorrection"
+                                                                                                },
                                                                                                 "PassDetectFaces": {
                                                                                                     "Type": "Pass",
-                                                                                                    "End": true,
                                                                                                     "Parameters": {
                                                                                                         "orientation_correction.$": "$.OrientationCorrection"
+                                                                                                    },
+                                                                                                    "End": true
+                                                                                                },
+                                                                                                "DefaultDetectFacesOrientationCorrection": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true,
+                                                                                                    "Result": {
+                                                                                                        "orientation_correction": null
                                                                                                     }
                                                                                                 }
                                                                                             }
@@ -1391,11 +1409,124 @@
                                                                                             "States": {
                                                                                                 "PassDetectText": {
                                                                                                     "Type": "Pass",
-                                                                                                    "End": true
+                                                                                                    "End": true,
+                                                                                                    "Parameters": {
+                                                                                                        "text_model_version.$": "$.TextModelVersion"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "MapDetectTextTextDetections",
+                                                                                            "States": {
+                                                                                                "MapDetectTextTextDetections": {
+                                                                                                    "Type": "Map",
+                                                                                                    "ItemProcessor": {
+                                                                                                        "ProcessorConfig": {
+                                                                                                            "Mode": "INLINE"
+                                                                                                        },
+                                                                                                        "StartAt": "ParallelDetectTextTextDetections",
+                                                                                                        "States": {
+                                                                                                            "ParallelDetectTextTextDetections": {
+                                                                                                                "Type": "Parallel",
+                                                                                                                "End": true,
+                                                                                                                "Branches": [
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassDetectTextTextDetections",
+                                                                                                                        "States": {
+                                                                                                                            "PassDetectTextTextDetections": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "detected_text.$": "$.DetectedText",
+                                                                                                                                    "id.$": "$.Id",
+                                                                                                                                    "parent_id.$": "$.ParentId",
+                                                                                                                                    "type.$": "$.Type"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "ParallelDetectTextTextDetectionsGeometry",
+                                                                                                                        "States": {
+                                                                                                                            "ParallelDetectTextTextDetectionsGeometry": {
+                                                                                                                                "Type": "Parallel",
+                                                                                                                                "End": true,
+                                                                                                                                "Branches": [
+                                                                                                                                    {
+                                                                                                                                        "StartAt": "PassDetectTextTextDetectionsGeometryBoundingBox",
+                                                                                                                                        "States": {
+                                                                                                                                            "PassDetectTextTextDetectionsGeometryBoundingBox": {
+                                                                                                                                                "Type": "Pass",
+                                                                                                                                                "End": true,
+                                                                                                                                                "InputPath": "$.BoundingBox",
+                                                                                                                                                "Parameters": {
+                                                                                                                                                    "height.$": "$.Height",
+                                                                                                                                                    "left.$": "$.Left",
+                                                                                                                                                    "top.$": "$.Top",
+                                                                                                                                                    "width.$": "$.Width"
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    },
+                                                                                                                                    {
+                                                                                                                                        "StartAt": "MapDetectTextTextDetectionsGeometryPolygon",
+                                                                                                                                        "States": {
+                                                                                                                                            "MapDetectTextTextDetectionsGeometryPolygon": {
+                                                                                                                                                "Type": "Map",
+                                                                                                                                                "ItemProcessor": {
+                                                                                                                                                    "ProcessorConfig": {
+                                                                                                                                                        "Mode": "INLINE"
+                                                                                                                                                    },
+                                                                                                                                                    "StartAt": "PassDetectTextTextDetectionsGeometryPolygon",
+                                                                                                                                                    "States": {
+                                                                                                                                                        "PassDetectTextTextDetectionsGeometryPolygon": {
+                                                                                                                                                            "Type": "Pass",
+                                                                                                                                                            "End": true
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                },
+                                                                                                                                                "End": true,
+                                                                                                                                                "ItemsPath": "$.Polygon",
+                                                                                                                                                "ItemSelector": {
+                                                                                                                                                    "x.$": "$.X",
+                                                                                                                                                    "y.$": "$.Y"
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                ],
+                                                                                                                                "InputPath": "$.Geometry",
+                                                                                                                                "ResultSelector": {
+                                                                                                                                    "bounding_box.$": "$[0]",
+                                                                                                                                    "polygon.$": "$[1]"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                                "ResultSelector": {
+                                                                                                                    "confidence.$": "$[0].confidence",
+                                                                                                                    "detected_text.$": "$[0].detected_text",
+                                                                                                                    "geometry.$": "$[1]",
+                                                                                                                    "id.$": "$[0].id",
+                                                                                                                    "parent_id.$": "$[0].parent_id",
+                                                                                                                    "type.$": "$[0].type"
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "End": true,
+                                                                                                    "ItemsPath": "$.TextDetections"
                                                                                                 }
                                                                                             }
                                                                                         }
-                                                                                    ]
+                                                                                    ],
+                                                                                    "ResultSelector": {
+                                                                                        "text_model_version.$": "$[0].text_model_version",
+                                                                                        "text_detections.$": "$[1]"
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
