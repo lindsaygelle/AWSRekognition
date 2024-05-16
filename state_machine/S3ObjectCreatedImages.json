@@ -606,7 +606,7 @@
                                                                                                     "Type": "Pass",
                                                                                                     "End": true,
                                                                                                     "Parameters": {
-                                                                                                        "orientation_correction": "$.OrientationCorrection"
+                                                                                                        "orientation_correction.$": "$.OrientationCorrection"
                                                                                                     }
                                                                                                 }
                                                                                             }
@@ -660,7 +660,7 @@
                                                                                                                                 "End": true,
                                                                                                                                 "InputPath": "$.Beard",
                                                                                                                                 "Parameters": {
-                                                                                                                                    "confidence": "$.Confidence",
+                                                                                                                                    "confidence.$": "$.Confidence",
                                                                                                                                     "value.$": "$.Value"
                                                                                                                                 }
                                                                                                                             }
@@ -978,8 +978,7 @@
                                                                                                     "Type": "Pass",
                                                                                                     "End": true,
                                                                                                     "Parameters": {
-                                                                                                        "moderation_model_version.$": "$.ModerationModelVersion",
-                                                                                                        "project_version.$": "$.ProjectVersion"
+                                                                                                        "moderation_model_version.$": "$.ModerationModelVersion"
                                                                                                     }
                                                                                                 }
                                                                                             }
@@ -1011,32 +1010,36 @@
                                                                                             }
                                                                                         },
                                                                                         {
-                                                                                            "StartAt": "ParallelDetectModerationLabelsHumanLoopActivationOutput",
+                                                                                            "StartAt": "ChoiceDetectModerationLabelsHumanLoopActivationOutput",
                                                                                             "States": {
-                                                                                                "ParallelDetectModerationLabelsHumanLoopActivationOutput": {
-                                                                                                    "Type": "Parallel",
-                                                                                                    "End": true,
-                                                                                                    "Branches": [
+                                                                                                "ChoiceDetectModerationLabelsHumanLoopActivationOutput": {
+                                                                                                    "Type": "Choice",
+                                                                                                    "Choices": [
                                                                                                         {
-                                                                                                            "StartAt": "PassDetectModerationLabelsHumanLoopActivationOutput",
-                                                                                                            "States": {
-                                                                                                                "PassDetectModerationLabelsHumanLoopActivationOutput": {
-                                                                                                                    "Type": "Pass",
-                                                                                                                    "End": true,
-                                                                                                                    "Parameters": {
-                                                                                                                        "human_loop_activation_conditions_evaluation_results.$": "$.HumanLoopActivationConditionsEvaluationResults",
-                                                                                                                        "human_loop_activation_reasons.$": "$.HumanLoopActivationReasons",
-                                                                                                                        "human_loop_arn.$": "$.HumanLoopArn"
-                                                                                                                    }
-                                                                                                                }
-                                                                                                            }
+                                                                                                            "Variable": "$.HumanLoopActivationOutput",
+                                                                                                            "IsPresent": true,
+                                                                                                            "Next": "PassDetectModerationLabelsHumanLoopActivationOutput"
                                                                                                         }
                                                                                                     ],
-                                                                                                    "InputPath": "$.HumanLoopActivationOutput",
-                                                                                                    "ResultSelector": {
-                                                                                                        "human_loop_activation_conditions_evaluation_results.$": "$[0].human_loop_activation_conditions_evaluation_results",
-                                                                                                        "human_loop_activation_reasons.$": "$[0].human_loop_activation_reasons",
-                                                                                                        "human_loop_arn.$": "$[0].human_loop_arn"
+                                                                                                    "Default": "DefaultDetectModerationLabelsHumanLoopActivationOutput"
+                                                                                                },
+                                                                                                "PassDetectModerationLabelsHumanLoopActivationOutput": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "Parameters": {
+                                                                                                        "human_loop_activation_conditions_evaluation_results.$": "$.HumanLoopActivationConditionsEvaluationResults",
+                                                                                                        "human_loop_activation_reasons.$": "$.HumanLoopActivationReasons",
+                                                                                                        "human_loop_arn.$": "$.HumanLoopArn"
+                                                                                                    },
+                                                                                                    "End": true,
+                                                                                                    "InputPath": "$.HumanLoopActivationOutput"
+                                                                                                },
+                                                                                                "DefaultDetectModerationLabelsHumanLoopActivationOutput": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true,
+                                                                                                    "Result": {
+                                                                                                        "human_loop_activation_conditions_evaluation_results": [],
+                                                                                                        "human_loop_activation_reasons": [],
+                                                                                                        "human_loop_arn": []
                                                                                                     }
                                                                                                 }
                                                                                             }
@@ -1074,8 +1077,7 @@
                                                                                         "content_types.$": "$[1]",
                                                                                         "human_loop_activation_output.$": "$[2]",
                                                                                         "moderation_labels.$": "$[3]",
-                                                                                        "moderation_model_version.$": "$[0].moderation_model_version",
-                                                                                        "project_version.$": "$[0].project_version"
+                                                                                        "moderation_model_version.$": "$[0].moderation_model_version"
                                                                                     }
                                                                                 }
                                                                             }
@@ -1136,11 +1138,208 @@
                                                                                             "States": {
                                                                                                 "PassDetectProtectiveEquipment": {
                                                                                                     "Type": "Pass",
-                                                                                                    "End": true
+                                                                                                    "End": true,
+                                                                                                    "Parameters": {
+                                                                                                        "protective_equipment_model_version.$": "$.ProtectiveEquipmentModelVersion"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "MapDetectProtectiveEquipmentPersons",
+                                                                                            "States": {
+                                                                                                "MapDetectProtectiveEquipmentPersons": {
+                                                                                                    "Type": "Map",
+                                                                                                    "ItemProcessor": {
+                                                                                                        "ProcessorConfig": {
+                                                                                                            "Mode": "INLINE"
+                                                                                                        },
+                                                                                                        "StartAt": "ParallelDetectProtectiveEquipmentPersons",
+                                                                                                        "States": {
+                                                                                                            "ParallelDetectProtectiveEquipmentPersons": {
+                                                                                                                "Type": "Parallel",
+                                                                                                                "End": true,
+                                                                                                                "Branches": [
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassDetectProtectiveEquipmentPersons",
+                                                                                                                        "States": {
+                                                                                                                            "PassDetectProtectiveEquipmentPersons": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "confidence.$": "$.Confidence",
+                                                                                                                                    "id.$": "$.Id"
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "MapDetectProtectiveEquipmentPersonsBodyParts",
+                                                                                                                        "States": {
+                                                                                                                            "MapDetectProtectiveEquipmentPersonsBodyParts": {
+                                                                                                                                "Type": "Map",
+                                                                                                                                "ItemProcessor": {
+                                                                                                                                    "ProcessorConfig": {
+                                                                                                                                        "Mode": "INLINE"
+                                                                                                                                    },
+                                                                                                                                    "StartAt": "ParallelDetectProtectiveEquipmentPersonsBodyParts",
+                                                                                                                                    "States": {
+                                                                                                                                        "ParallelDetectProtectiveEquipmentPersonsBodyParts": {
+                                                                                                                                            "Type": "Parallel",
+                                                                                                                                            "End": true,
+                                                                                                                                            "Branches": [
+                                                                                                                                                {
+                                                                                                                                                    "StartAt": "PassDetectProtectiveEquipmentPersonsBodyParts",
+                                                                                                                                                    "States": {
+                                                                                                                                                        "PassDetectProtectiveEquipmentPersonsBodyParts": {
+                                                                                                                                                            "Type": "Pass",
+                                                                                                                                                            "End": true,
+                                                                                                                                                            "Parameters": {
+                                                                                                                                                                "confidence.$": "$.Confidence",
+                                                                                                                                                                "name.$": "$.Name"
+                                                                                                                                                            }
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "StartAt": "MapDetectProtectiveEquipmentPersonsBodyPartsEquipmentDetections",
+                                                                                                                                                    "States": {
+                                                                                                                                                        "MapDetectProtectiveEquipmentPersonsBodyPartsEquipmentDetections": {
+                                                                                                                                                            "Type": "Map",
+                                                                                                                                                            "ItemProcessor": {
+                                                                                                                                                                "ProcessorConfig": {
+                                                                                                                                                                    "Mode": "INLINE"
+                                                                                                                                                                },
+                                                                                                                                                                "StartAt": "ParallelDetectProtectiveEquipmentPersonsBodyPartsEquipmentDetections",
+                                                                                                                                                                "States": {
+                                                                                                                                                                    "ParallelDetectProtectiveEquipmentPersonsBodyPartsEquipmentDetections": {
+                                                                                                                                                                        "Type": "Parallel",
+                                                                                                                                                                        "End": true,
+                                                                                                                                                                        "Branches": [
+                                                                                                                                                                            {
+                                                                                                                                                                                "StartAt": "PassDetectProtectiveEquipmentPersonsBodyPartsEquipmentDetections",
+                                                                                                                                                                                "States": {
+                                                                                                                                                                                    "PassDetectProtectiveEquipmentPersonsBodyPartsEquipmentDetections": {
+                                                                                                                                                                                        "Type": "Pass",
+                                                                                                                                                                                        "End": true,
+                                                                                                                                                                                        "Parameters": {
+                                                                                                                                                                                            "confidence.$": "$.Confidence",
+                                                                                                                                                                                            "type.$": "$.Type"
+                                                                                                                                                                                        }
+                                                                                                                                                                                    }
+                                                                                                                                                                                }
+                                                                                                                                                                            },
+                                                                                                                                                                            {
+                                                                                                                                                                                "StartAt": "PassDetectProtectiveEquipmentPersonsBodyPartsEquipmentDetectionsBoundingBox",
+                                                                                                                                                                                "States": {
+                                                                                                                                                                                    "PassDetectProtectiveEquipmentPersonsBodyPartsEquipmentDetectionsBoundingBox": {
+                                                                                                                                                                                        "Type": "Pass",
+                                                                                                                                                                                        "End": true,
+                                                                                                                                                                                        "Parameters": {
+                                                                                                                                                                                            "height.$": "$.Height",
+                                                                                                                                                                                            "left.$": "$.Left",
+                                                                                                                                                                                            "top.$": "$.Top",
+                                                                                                                                                                                            "width.$": "$.Width"
+                                                                                                                                                                                        },
+                                                                                                                                                                                        "InputPath": "$.BoundingBox"
+                                                                                                                                                                                    }
+                                                                                                                                                                                }
+                                                                                                                                                                            },
+                                                                                                                                                                            {
+                                                                                                                                                                                "StartAt": "DetectProtectiveEquipmentPersonsBodyPartsEquipmentDetectionsCoversBodyPart",
+                                                                                                                                                                                "States": {
+                                                                                                                                                                                    "DetectProtectiveEquipmentPersonsBodyPartsEquipmentDetectionsCoversBodyPart": {
+                                                                                                                                                                                        "Type": "Pass",
+                                                                                                                                                                                        "End": true,
+                                                                                                                                                                                        "InputPath": "$.CoversBodyPart",
+                                                                                                                                                                                        "Parameters": {
+                                                                                                                                                                                            "confidence.$": "$.Confidence",
+                                                                                                                                                                                            "value.$": "$.Value"
+                                                                                                                                                                                        }
+                                                                                                                                                                                    }
+                                                                                                                                                                                }
+                                                                                                                                                                            }
+                                                                                                                                                                        ],
+                                                                                                                                                                        "ResultSelector": {
+                                                                                                                                                                            "bounding_box.$": "$[1]",
+                                                                                                                                                                            "confidence.$": "$[0].confidence",
+                                                                                                                                                                            "covers_body_part.$": "$[2]",
+                                                                                                                                                                            "type.$": "$[0].type"
+                                                                                                                                                                        }
+                                                                                                                                                                    }
+                                                                                                                                                                }
+                                                                                                                                                            },
+                                                                                                                                                            "End": true,
+                                                                                                                                                            "ItemsPath": "$.EquipmentDetections"
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                }
+                                                                                                                                            ],
+                                                                                                                                            "ResultSelector": {
+                                                                                                                                                "confidence.$": "$[0].confidence",
+                                                                                                                                                "equipment_detections.$": "$[1]",
+                                                                                                                                                "name.$": "$[0].name"
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                },
+                                                                                                                                "End": true,
+                                                                                                                                "ItemsPath": "$.BodyParts"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "StartAt": "PassDetectProtectiveEquipmentPersonsBodyPartsBoundingBox",
+                                                                                                                        "States": {
+                                                                                                                            "PassDetectProtectiveEquipmentPersonsBodyPartsBoundingBox": {
+                                                                                                                                "Type": "Pass",
+                                                                                                                                "End": true,
+                                                                                                                                "Parameters": {
+                                                                                                                                    "height.$": "$.Height",
+                                                                                                                                    "left.$": "$.Left",
+                                                                                                                                    "top.$": "$.Top",
+                                                                                                                                    "width.$": "$.Width"
+                                                                                                                                },
+                                                                                                                                "InputPath": "$.BoundingBox"
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                                "ResultSelector": {
+                                                                                                                    "body_parts.$": "$[1]",
+                                                                                                                    "bounding_box.$": "$[2]",
+                                                                                                                    "confidence.$": "$[0].confidence",
+                                                                                                                    "id.$": "$[0].id"
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "End": true,
+                                                                                                    "ItemsPath": "$.Persons"
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "PassDetectProtectiveEquipmentSummary",
+                                                                                            "States": {
+                                                                                                "PassDetectProtectiveEquipmentSummary": {
+                                                                                                    "Type": "Pass",
+                                                                                                    "End": true,
+                                                                                                    "InputPath": "$.Summary",
+                                                                                                    "Parameters": {
+                                                                                                        "persons_indeterminate.$": "$.PersonsIndeterminate",
+                                                                                                        "persons_without_required_equipment.$": "$.PersonsWithoutRequiredEquipment",
+                                                                                                        "persons_with_required_equipment.$": "$.PersonsWithRequiredEquipment"
+                                                                                                    }
                                                                                                 }
                                                                                             }
                                                                                         }
-                                                                                    ]
+                                                                                    ],
+                                                                                    "ResultSelector": {
+                                                                                        "persons.$": "$[1]",
+                                                                                        "protective_equipment_model_version.$": "$[0].protective_equipment_model_version",
+                                                                                        "summary.$": "$[2]"
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         },
@@ -1200,7 +1399,14 @@
                                                                                 }
                                                                             }
                                                                         }
-                                                                    ]
+                                                                    ],
+                                                                    "ResultSelector": {
+                                                                        "detect_labels.$": "$[0]",
+                                                                        "detect_faces.$": "$[1]",
+                                                                        "detect_moderation_labels.$": "$[2]",
+                                                                        "detect_protective_equipment.$": "$[3]",
+                                                                        "detect_text.$": "$[4]"
+                                                                    }
                                                                 },
                                                                 "InvalidSQSBodyRecordEventName": {
                                                                     "Type": "Pass",
