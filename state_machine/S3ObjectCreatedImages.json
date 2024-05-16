@@ -976,11 +976,107 @@
                                                                                             "States": {
                                                                                                 "PassDetectModerationLabels": {
                                                                                                     "Type": "Pass",
-                                                                                                    "End": true
+                                                                                                    "End": true,
+                                                                                                    "Parameters": {
+                                                                                                        "moderation_model_version.$": "$.ModerationModelVersion",
+                                                                                                        "project_version.$": "$.ProjectVersion"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "MapDetectModerationLabelsContentTypes",
+                                                                                            "States": {
+                                                                                                "MapDetectModerationLabelsContentTypes": {
+                                                                                                    "Type": "Map",
+                                                                                                    "ItemProcessor": {
+                                                                                                        "ProcessorConfig": {
+                                                                                                            "Mode": "INLINE"
+                                                                                                        },
+                                                                                                        "StartAt": "PassDetectModerationLabelsContentTypes",
+                                                                                                        "States": {
+                                                                                                            "PassDetectModerationLabelsContentTypes": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "End": true,
+                                                                                                    "ItemsPath": "$.ContentTypes",
+                                                                                                    "ItemSelector": {
+                                                                                                        "confidence.$": "$$.Map.Item.Value.Confidence",
+                                                                                                        "name.$": "$$.Map.Item.Value.Name"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "ParallelDetectModerationLabelsHumanLoopActivationOutput",
+                                                                                            "States": {
+                                                                                                "ParallelDetectModerationLabelsHumanLoopActivationOutput": {
+                                                                                                    "Type": "Parallel",
+                                                                                                    "End": true,
+                                                                                                    "Branches": [
+                                                                                                        {
+                                                                                                            "StartAt": "PassDetectModerationLabelsHumanLoopActivationOutput",
+                                                                                                            "States": {
+                                                                                                                "PassDetectModerationLabelsHumanLoopActivationOutput": {
+                                                                                                                    "Type": "Pass",
+                                                                                                                    "End": true,
+                                                                                                                    "Parameters": {
+                                                                                                                        "human_loop_activation_conditions_evaluation_results.$": "$.HumanLoopActivationConditionsEvaluationResults",
+                                                                                                                        "human_loop_activation_reasons.$": "$.HumanLoopActivationReasons",
+                                                                                                                        "human_loop_arn.$": "$.HumanLoopArn"
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    ],
+                                                                                                    "InputPath": "$.HumanLoopActivationOutput",
+                                                                                                    "ResultSelector": {
+                                                                                                        "human_loop_activation_conditions_evaluation_results.$": "$[0].human_loop_activation_conditions_evaluation_results",
+                                                                                                        "human_loop_activation_reasons.$": "$[0].human_loop_activation_reasons",
+                                                                                                        "human_loop_arn.$": "$[0].human_loop_arn"
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                        {
+                                                                                            "StartAt": "MapDetectModerationLabelsModerationLabels",
+                                                                                            "States": {
+                                                                                                "MapDetectModerationLabelsModerationLabels": {
+                                                                                                    "Type": "Map",
+                                                                                                    "ItemProcessor": {
+                                                                                                        "ProcessorConfig": {
+                                                                                                            "Mode": "INLINE"
+                                                                                                        },
+                                                                                                        "StartAt": "PassDetectModerationLabelsModerationLabels",
+                                                                                                        "States": {
+                                                                                                            "PassDetectModerationLabelsModerationLabels": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    "End": true,
+                                                                                                    "ItemsPath": "$.ModerationLabels",
+                                                                                                    "ItemSelector": {
+                                                                                                        "confidence.$": "$$.Map.Item.Value.Confidence",
+                                                                                                        "name": "$$.Map.Item.Value.Name",
+                                                                                                        "parent_name": "$$.Map.Item.Value.ParentName",
+                                                                                                        "taxonomy_level": "$$.Map.Item.Value.TaxonomyLevel"
+                                                                                                    }
                                                                                                 }
                                                                                             }
                                                                                         }
-                                                                                    ]
+                                                                                    ],
+                                                                                    "ResultSelector": {
+                                                                                        "content_types.$": "$[1]",
+                                                                                        "human_loop_activation_output.$": "$[2]",
+                                                                                        "moderation_labels.$": "$[3]",
+                                                                                        "moderation_model_version.$": "$[0].moderation_model_version",
+                                                                                        "project_version.$": "$[0].project_version"
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         },
