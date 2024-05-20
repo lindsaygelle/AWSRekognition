@@ -11,6 +11,19 @@ data "aws_iam_policy_document" "assume_role_pipes_pipe_s3_object_created_images"
   }
 }
 
+data "aws_iam_policy_document" "assume_role_sfn_state_machine_rekognition_detect_faces" {
+  statement {
+    actions = [
+      "sts:AssumeRole"
+    ]
+    effect = "Allow"
+    principals {
+      identifiers = ["states.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
 data "aws_iam_policy_document" "assume_role_sfn_state_machine_s3_object_created_images" {
   statement {
     actions = [
@@ -43,6 +56,38 @@ data "aws_iam_policy_document" "pipes_pipe_s3_object_created_images" {
     effect = "Allow"
     resources = [
       aws_sfn_state_machine.s3_object_created_images.arn
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "sfn_state_machine_rekognition_detect_faces" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectAcl",
+      "s3:GetObjectAttributes",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionAcl",
+      "s3:GetObjectVersionAttributes",
+      "s3:GetObjectVersionForReplication",
+      "s3:GetObjectVersionTagging",
+      "s3:GetObjectVersionTorrent",
+    ]
+    effect = "Allow"
+    resources = [
+      "${aws_s3_bucket.main.arn}/${aws_s3_object.images.key}*"
+    ]
+  }
+
+
+  statement {
+    actions = [
+      "rekognition:DetectFaces"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
     ]
   }
 }

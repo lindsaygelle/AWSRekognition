@@ -1,0 +1,904 @@
+{
+    "StartAt": "ParallelCheckInput",
+    "States": {
+        "ParallelCheckInput": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "CheckAttributes",
+                    "States": {
+                        "CheckAttributes": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "And": [
+                                        {
+                                            "Variable": "$.Attributes",
+                                            "IsPresent": true
+                                        }
+                                    ],
+                                    "Next": "TransformAttributes"
+                                }
+                            ],
+                            "Default": "CreateDefaultAttributes"
+                        },
+                        "TransformAttributes": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.Attributes"
+                        },
+                        "CreateDefaultAttributes": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "Attributes": [
+                                    "ALL"
+                                ]
+                            },
+                            "OutputPath": "$.Attributes"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckImage",
+                    "States": {
+                        "CheckImage": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.Image",
+                                    "IsPresent": true,
+                                    "Next": "CheckS3Object"
+                                }
+                            ],
+                            "Default": "FailCheckImage"
+                        },
+                        "CheckS3Object": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.S3Object",
+                                    "IsPresent": true,
+                                    "Next": "ParallelCheckS3Object"
+                                }
+                            ],
+                            "Default": "FailCheckS3Object",
+                            "InputPath": "$.Image"
+                        },
+                        "ParallelCheckS3Object": {
+                            "Type": "Parallel",
+                            "End": true,
+                            "Branches": [
+                                {
+                                    "StartAt": "CheckS3ObjectBucket",
+                                    "States": {
+                                        "CheckS3ObjectBucket": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Bucket",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Bucket",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "TransformS3BucketObject"
+                                                }
+                                            ],
+                                            "Default": "FailCheckS3ObjectBucket"
+                                        },
+                                        "TransformS3BucketObject": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.Bucket"
+                                        },
+                                        "FailCheckS3ObjectBucket": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckS3ObjectName",
+                                    "States": {
+                                        "CheckS3ObjectName": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "TransformS3ObjectName"
+                                                }
+                                            ],
+                                            "Default": "FailCheckS3ObjectName"
+                                        },
+                                        "TransformS3ObjectName": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.Name"
+                                        },
+                                        "FailCheckS3ObjectName": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultSelector": {
+                                "S3Object": {
+                                    "Bucket.$": "$[0]",
+                                    "Name.$": "$[1]"
+                                }
+                            },
+                            "InputPath": "$.S3Object"
+                        },
+                        "FailCheckS3Object": {
+                            "Type": "Fail"
+                        },
+                        "FailCheckImage": {
+                            "Type": "Fail"
+                        }
+                    }
+                }
+            ],
+            "ResultSelector": {
+                "Attributes.$": "$[0]",
+                "Image.$": "$[1]"
+            },
+            "Next": "DetectFaces"
+        },
+        "DetectFaces": {
+            "Type": "Task",
+            "Parameters": {
+                "Attributes.$": "$.Attributes",
+                "Image.$": "$.Image"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:rekognition:detectFaces",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "Next": "FailDetectFaces"
+                }
+            ],
+            "Next": "ParallelFaces",
+            "ResultPath": "$.DetectFaces"
+        },
+        "ParallelFaces": {
+            "Type": "Parallel",
+            "End": true,
+            "Branches": [
+                {
+                    "StartAt": "CheckFaceDetails",
+                    "States": {
+                        "CheckFaceDetails": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.FaceDetails",
+                                    "IsPresent": true,
+                                    "Next": "MapFaceDetails"
+                                }
+                            ],
+                            "Default": "CreateDefaultFaceDetails"
+                        },
+                        "MapFaceDetails": {
+                            "Type": "Map",
+                            "ItemProcessor": {
+                                "ProcessorConfig": {
+                                    "Mode": "INLINE"
+                                },
+                                "StartAt": "ParallelFaceDetail",
+                                "States": {
+                                    "ParallelFaceDetail": {
+                                        "Type": "Parallel",
+                                        "End": true,
+                                        "Branches": [
+                                            {
+                                                "StartAt": "CheckAgeRange",
+                                                "States": {
+                                                    "CheckAgeRange": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.AgeRange",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformAgeRange"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultAgeRange"
+                                                    },
+                                                    "TransformAgeRange": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.AgeRange",
+                                                        "Parameters": {
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "high.$": "$.High",
+                                                            "low.$": "$.Low"
+                                                        }
+                                                    },
+                                                    "CreateDefaultAgeRange": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "AgeRange": null
+                                                        },
+                                                        "OutputPath": "$.AgeRange"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckBeard",
+                                                "States": {
+                                                    "CheckBeard": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Beard",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformBeard"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultBeard"
+                                                    },
+                                                    "TransformBeard": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Beard",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultBeard": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Beard": null
+                                                        },
+                                                        "OutputPath": "$.Beard"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckBoundingBox",
+                                                "States": {
+                                                    "CheckBoundingBox": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.BoundingBox",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformBoundingBox"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultBoundingBox"
+                                                    },
+                                                    "TransformBoundingBox": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.BoundingBox",
+                                                        "Parameters": {
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "height.$": "$.Height",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "left.$": "$.Left",
+                                                            "top.$": "$.Top",
+                                                            "width.$": "$.Width"
+                                                        }
+                                                    },
+                                                    "CreateDefaultBoundingBox": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "BoundingBox": null
+                                                        },
+                                                        "OutputPath": "$.BoundingBox"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckConfidence",
+                                                "States": {
+                                                    "CheckConfidence": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Confidence",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformConfidence"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultConfidence"
+                                                    },
+                                                    "TransformConfidence": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Confidence"
+                                                    },
+                                                    "CreateDefaultConfidence": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Confidence": null
+                                                        },
+                                                        "OutputPath": "$.Confidence"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckEmotions",
+                                                "States": {
+                                                    "CheckEmotions": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Emotions",
+                                                                "IsPresent": true,
+                                                                "Next": "MapEmotions"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultEmotions"
+                                                    },
+                                                    "MapEmotions": {
+                                                        "Type": "Map",
+                                                        "ItemProcessor": {
+                                                            "ProcessorConfig": {
+                                                                "Mode": "INLINE"
+                                                            },
+                                                            "StartAt": "TransformEmotion",
+                                                            "States": {
+                                                                "TransformEmotion": {
+                                                                    "Type": "Pass",
+                                                                    "End": true,
+                                                                    "Parameters": {
+                                                                        "confidence.$": "$.Confidence",
+                                                                        "execution_id.$": "$$.Execution.Id",
+                                                                        "id.$": "States.Hash($, 'MD5')",
+                                                                        "value.$": "$.Value"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "End": true,
+                                                        "ItemsPath": "$.Emotions"
+                                                    },
+                                                    "CreateDefaultEmotions": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Emotions": null
+                                                        },
+                                                        "OutputPath": "$.Emotions"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckEyeDirection",
+                                                "States": {
+                                                    "CheckEyeDirection": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.EyeDirection",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformEyeDirection"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultEyeDirection"
+                                                    },
+                                                    "TransformEyeDirection": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.EyeDirection",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "pitch.$": "$.Pitch",
+                                                            "yaw.$": "$.Yaw"
+                                                        }
+                                                    },
+                                                    "CreateDefaultEyeDirection": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "EyeDirection": null
+                                                        },
+                                                        "OutputPath": "$.EyeDirection"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckEyeglasses",
+                                                "States": {
+                                                    "CheckEyeglasses": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Eyeglasses",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformEyeglasses"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultEyeglasses"
+                                                    },
+                                                    "TransformEyeglasses": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Eyeglasses",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultEyeglasses": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Eyeglasses": null
+                                                        },
+                                                        "OutputPath": "$.Eyeglasses"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckEyesOpen",
+                                                "States": {
+                                                    "CheckEyesOpen": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.EyesOpen",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformEyesOpen"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultEyesOpen"
+                                                    },
+                                                    "TransformEyesOpen": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.EyesOpen",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultEyesOpen": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "EyesOpen": null
+                                                        },
+                                                        "OutputPath": "$.EyesOpen"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckFaceOccluded",
+                                                "States": {
+                                                    "CheckFaceOccluded": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.FaceOccluded",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformFaceOccluded"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultFaceOccluded"
+                                                    },
+                                                    "TransformFaceOccluded": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.FaceOccluded",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultFaceOccluded": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "FaceOccluded": null
+                                                        },
+                                                        "OutputPath": "$.FaceOccluded"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckGender",
+                                                "States": {
+                                                    "CheckGender": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Gender",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformGender"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultGender"
+                                                    },
+                                                    "TransformGender": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Gender",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultGender": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Gender": null
+                                                        },
+                                                        "OutputPath": "$.Gender"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckLandmarks",
+                                                "States": {
+                                                    "CheckLandmarks": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Landmarks",
+                                                                "IsPresent": true,
+                                                                "Next": "MapLandmarks"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultLandmarks"
+                                                    },
+                                                    "MapLandmarks": {
+                                                        "Type": "Map",
+                                                        "ItemProcessor": {
+                                                            "ProcessorConfig": {
+                                                                "Mode": "INLINE"
+                                                            },
+                                                            "StartAt": "TransformLandmark",
+                                                            "States": {
+                                                                "TransformLandmark": {
+                                                                    "Type": "Pass",
+                                                                    "End": true,
+                                                                    "Parameters": {
+                                                                        "execution_id.$": "$$.Execution.Id",
+                                                                        "id.$": "States.Hash($, 'MD5')",
+                                                                        "type.$": "$.Type",
+                                                                        "x.$": "$.X",
+                                                                        "y.$": "$.Y"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "End": true,
+                                                        "ItemsPath": "$.Landmarks"
+                                                    },
+                                                    "CreateDefaultLandmarks": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Landmarks": null
+                                                        },
+                                                        "OutputPath": "$.Landmarks"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckMouthOpen",
+                                                "States": {
+                                                    "CheckMouthOpen": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.MouthOpen",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformMouthOpen"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultMouthOpen"
+                                                    },
+                                                    "TransformMouthOpen": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.MouthOpen",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultMouthOpen": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "MouthOpen": null
+                                                        },
+                                                        "OutputPath": "$.MouthOpen"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckMustache",
+                                                "States": {
+                                                    "CheckMustache": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Mustache",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformMustache"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultMustache"
+                                                    },
+                                                    "TransformMustache": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Mustache",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultMustache": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Mustache": null
+                                                        },
+                                                        "OutputPath": "$.Mustache"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckPose",
+                                                "States": {
+                                                    "CheckPose": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Pose",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformPose"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultPose"
+                                                    },
+                                                    "TransformPose": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Pose",
+                                                        "Parameters": {
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "pitch.$": "$.Pitch",
+                                                            "roll.$": "$.Roll",
+                                                            "yaw.$": "$.Yaw"
+                                                        }
+                                                    },
+                                                    "CreateDefaultPose": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Pose": null
+                                                        },
+                                                        "OutputPath": "$.Pose"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckQuality",
+                                                "States": {
+                                                    "CheckQuality": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Quality",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformQuality"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultQuality"
+                                                    },
+                                                    "TransformQuality": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Quality",
+                                                        "Parameters": {
+                                                            "brightness.$": "$.Brightness",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "sharpness.$": "$.Sharpness"
+                                                        }
+                                                    },
+                                                    "CreateDefaultQuality": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Quality": null
+                                                        },
+                                                        "OutputPath": "$.Quality"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckSmile",
+                                                "States": {
+                                                    "CheckSmile": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Smile",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformSmile"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultSmile"
+                                                    },
+                                                    "TransformSmile": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Smile",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultSmile": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Smile": null
+                                                        },
+                                                        "OutputPath": "$.Smile"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckSunglasses",
+                                                "States": {
+                                                    "CheckSunglasses": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Sunglasses",
+                                                                "IsPresent": true,
+                                                                "Next": "TransformSunglasses"
+                                                            }
+                                                        ],
+                                                        "Default": "CreateDefaultSunglasses"
+                                                    },
+                                                    "TransformSunglasses": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Sunglasses",
+                                                        "Parameters": {
+                                                            "confidence.$": "$.Confidence",
+                                                            "execution_id.$": "$$.Execution.Id",
+                                                            "id.$": "States.Hash($, 'MD5')",
+                                                            "value.$": "$.Value"
+                                                        }
+                                                    },
+                                                    "CreateDefaultSunglasses": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Sunglasses": null
+                                                        },
+                                                        "OutputPath": "$.Sunglasses"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "ResultSelector": {
+                                            "age_range.$": "$[0]",
+                                            "beard.$": "$[1]",
+                                            "bounding_box.$": "$[2]",
+                                            "confidence.$": "$[3]",
+                                            "create_at.$": "$$.Execution.StartTime",
+                                            "emotions.$": "$[4]",
+                                            "execution_id.$": "$$.Execution.Id",
+                                            "eye_direction.$": "$[5]",
+                                            "eye_glasses.$": "$[6]",
+                                            "eyes_open.$": "$[7]",
+                                            "face_occluded.$": "$[8]",
+                                            "gender.$": "$[9]",
+                                            "landmarks.$": "$[10]",
+                                            "mouth_open.$": "$[11]",
+                                            "mustache.$": "$[12]",
+                                            "pose.$": "$[13]",
+                                            "quality.$": "$[14]",
+                                            "smile.$": "$[15]",
+                                            "sunglasses.$": "$[16]"
+                                        }
+                                    }
+                                }
+                            },
+                            "End": true,
+                            "ItemsPath": "$.FaceDetails"
+                        },
+                        "CreateDefaultFaceDetails": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "FaceDetails": null
+                            },
+                            "OutputPath": "$.FaceDetails"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOrientationCorrection",
+                    "States": {
+                        "CheckOrientationCorrection": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.OrientationCorrection",
+                                    "IsPresent": true,
+                                    "Next": "PassOrientationCorrection"
+                                }
+                            ],
+                            "Default": "CreateDefaultOrientationCorrection"
+                        },
+                        "PassOrientationCorrection": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.OrientationCorrection"
+                        },
+                        "CreateDefaultOrientationCorrection": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "OrientationCorrection": null
+                            },
+                            "OutputPath": "$.OrientationCorrection"
+                        }
+                    }
+                }
+            ],
+            "ResultSelector": {
+                "create_at.$": "$$.Execution.StartTime",
+                "face_details.$": "$[0]",
+                "orientation_correction.$": "$[1]"
+            }
+        },
+        "FailDetectFaces": {
+            "Type": "Fail"
+        }
+    }
+}
