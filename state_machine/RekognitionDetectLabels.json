@@ -1,0 +1,200 @@
+{
+    "StartAt": "ParallelCheckInput",
+    "States": {
+        "ParallelCheckInput": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "CheckAttributes",
+                    "States": {
+                        "CheckAttributes": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "And": [
+                                        {
+                                            "Variable": "$.Attributes",
+                                            "IsPresent": true
+                                        }
+                                    ],
+                                    "Next": "TransformAttributes"
+                                }
+                            ],
+                            "Default": "CreateDefaultAttributes"
+                        },
+                        "TransformAttributes": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.Attributes"
+                        },
+                        "CreateDefaultAttributes": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "Attributes": [
+                                    "ALL"
+                                ]
+                            },
+                            "OutputPath": "$.Attributes"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckImage",
+                    "States": {
+                        "CheckImage": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.Image",
+                                    "IsPresent": true,
+                                    "Next": "CheckS3Object"
+                                }
+                            ],
+                            "Default": "FailCheckImage"
+                        },
+                        "CheckS3Object": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.S3Object",
+                                    "IsPresent": true,
+                                    "Next": "ParallelCheckS3Object"
+                                }
+                            ],
+                            "Default": "FailCheckS3Object",
+                            "InputPath": "$.Image"
+                        },
+                        "ParallelCheckS3Object": {
+                            "Type": "Parallel",
+                            "End": true,
+                            "Branches": [
+                                {
+                                    "StartAt": "CheckS3ObjectBucket",
+                                    "States": {
+                                        "CheckS3ObjectBucket": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Bucket",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Bucket",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "TransformS3BucketObject"
+                                                }
+                                            ],
+                                            "Default": "FailCheckS3ObjectBucket"
+                                        },
+                                        "TransformS3BucketObject": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.Bucket"
+                                        },
+                                        "FailCheckS3ObjectBucket": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckS3ObjectName",
+                                    "States": {
+                                        "CheckS3ObjectName": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "TransformS3ObjectName"
+                                                }
+                                            ],
+                                            "Default": "FailCheckS3ObjectName"
+                                        },
+                                        "TransformS3ObjectName": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.Name"
+                                        },
+                                        "FailCheckS3ObjectName": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultSelector": {
+                                "S3Object": {
+                                    "Bucket.$": "$[0]",
+                                    "Name.$": "$[1]"
+                                }
+                            },
+                            "InputPath": "$.S3Object"
+                        },
+                        "FailCheckS3Object": {
+                            "Type": "Fail"
+                        },
+                        "FailCheckImage": {
+                            "Type": "Fail"
+                        }
+                    }
+                }
+            ],
+            "ResultSelector": {
+                "Attributes.$": "$[0]",
+                "Image.$": "$[1]"
+            },
+            "Next": "DetectLabels"
+        },
+        "DetectLabels": {
+            "Type": "Task",
+            "Parameters": {
+                "Attributes.$": "$.Attributes",
+                "Image.$": "$.Image"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "Next": "FailDetectLabels"
+                }
+            ],
+            "Next": "ParallelLabels",
+            "ResultPath": "$.DetectLabels"
+        },
+        "ParallelLabels": {
+            "Type": "Parallel",
+            "End": true,
+            "Branches": [
+                {
+                    "StartAt": "Pass",
+                    "States": {
+                        "Pass": {
+                            "Type": "Pass",
+                            "End": true
+                        }
+                    }
+                }
+            ],
+            "ResultSelector": {
+                "create_at.$": "$$.Execution.StartTime"
+            }
+        },
+        "FailDetectLabels": {
+            "Type": "Fail"
+        }
+    }
+}
