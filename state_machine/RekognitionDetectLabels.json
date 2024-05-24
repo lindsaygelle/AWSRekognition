@@ -5,165 +5,859 @@
             "Type": "Parallel",
             "Branches": [
                 {
-                    "StartAt": "CheckAttributes",
+                    "StartAt": "CheckInputRekognition",
                     "States": {
-                        "CheckAttributes": {
+                        "CheckInputRekognition": {
                             "Type": "Choice",
                             "Choices": [
                                 {
-                                    "And": [
-                                        {
-                                            "Variable": "$.Attributes",
-                                            "IsPresent": true
-                                        }
-                                    ],
-                                    "Next": "TransformAttributes"
+                                    "Variable": "$.Rekognition",
+                                    "IsPresent": true,
+                                    "Next": "CheckInputDetectLabels"
                                 }
                             ],
-                            "Default": "CreateDefaultAttributes"
+                            "Default": "DefaultInputRekognition"
                         },
-                        "TransformAttributes": {
+                        "DefaultInputRekognition": {
                             "Type": "Pass",
-                            "End": true,
-                            "InputPath": "$.Attributes"
-                        },
-                        "CreateDefaultAttributes": {
-                            "Type": "Pass",
-                            "End": true,
                             "Parameters": {
-                                "Attributes": [
-                                    "ALL"
-                                ]
+                                "Rekognition": {}
                             },
-                            "OutputPath": "$.Attributes"
-                        }
-                    }
-                },
-                {
-                    "StartAt": "CheckImage",
-                    "States": {
-                        "CheckImage": {
+                            "Next": "CheckInputDetectLabels"
+                        },
+                        "CheckInputDetectLabels": {
                             "Type": "Choice",
                             "Choices": [
                                 {
-                                    "Variable": "$.Image",
+                                    "Variable": "$.DetectLabels",
                                     "IsPresent": true,
-                                    "Next": "CheckS3Object"
+                                    "Next": "ParallelCheckInputDetectLabels"
                                 }
                             ],
-                            "Default": "FailCheckImage"
+                            "InputPath": "$.Rekognition",
+                            "Default": "DefaultInputDetectLabels"
                         },
-                        "CheckS3Object": {
-                            "Type": "Choice",
-                            "Choices": [
-                                {
-                                    "Variable": "$.S3Object",
-                                    "IsPresent": true,
-                                    "Next": "ParallelCheckS3Object"
-                                }
-                            ],
-                            "Default": "FailCheckS3Object",
-                            "InputPath": "$.Image"
+                        "DefaultInputDetectLabels": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "DetectFaces": {}
+                            },
+                            "Next": "ParallelCheckInputDetectLabels"
                         },
-                        "ParallelCheckS3Object": {
+                        "ParallelCheckInputDetectLabels": {
                             "Type": "Parallel",
                             "End": true,
                             "Branches": [
                                 {
-                                    "StartAt": "CheckS3ObjectBucket",
+                                    "StartAt": "CheckInputFeatures",
                                     "States": {
-                                        "CheckS3ObjectBucket": {
+                                        "CheckInputFeatures": {
                                             "Type": "Choice",
                                             "Choices": [
                                                 {
-                                                    "And": [
-                                                        {
-                                                            "Variable": "$.Bucket",
-                                                            "IsPresent": true
-                                                        },
-                                                        {
-                                                            "Variable": "$.Bucket",
-                                                            "IsString": true
-                                                        }
-                                                    ],
-                                                    "Next": "TransformS3BucketObject"
+                                                    "Variable": "$.Features",
+                                                    "IsPresent": true,
+                                                    "Next": "MapInputFeatures"
                                                 }
                                             ],
-                                            "Default": "FailCheckS3ObjectBucket"
+                                            "Default": "DefaultInputFeatures"
                                         },
-                                        "TransformS3BucketObject": {
-                                            "Type": "Pass",
+                                        "MapInputFeatures": {
+                                            "Type": "Map",
+                                            "ItemProcessor": {
+                                                "ProcessorConfig": {
+                                                    "Mode": "INLINE"
+                                                },
+                                                "StartAt": "CheckValueFeature",
+                                                "States": {
+                                                    "CheckValueFeature": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "And": [
+                                                                    {
+                                                                        "Variable": "$",
+                                                                        "IsString": true
+                                                                    },
+                                                                    {
+                                                                        "Or": [
+                                                                            {
+                                                                                "Variable": "$",
+                                                                                "StringEquals": "GENERAL_LABELS"
+                                                                            },
+                                                                            {
+                                                                                "Variable": "$",
+                                                                                "StringEquals": "IMAGE_PROPERTIES"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ],
+                                                                "Next": "PassValueFeature"
+                                                            }
+                                                        ],
+                                                        "Default": "FailCheckValueFeature"
+                                                    },
+                                                    "PassValueFeature": {
+                                                        "Type": "Pass",
+                                                        "End": true
+                                                    },
+                                                    "FailCheckValueFeature": {
+                                                        "Type": "Fail"
+                                                    }
+                                                }
+                                            },
                                             "End": true,
-                                            "InputPath": "$.Bucket"
+                                            "ItemsPath": "$.Features"
                                         },
-                                        "FailCheckS3ObjectBucket": {
-                                            "Type": "Fail"
+                                        "DefaultInputFeatures": {
+                                            "Type": "Pass",
+                                            "Parameters": {
+                                                "Features": [
+                                                    "GENERAL_LABELS",
+                                                    "IMAGE_PROPERTIES"
+                                                ]
+                                            },
+                                            "Next": "MapInputFeatures"
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt": "CheckS3ObjectName",
+                                    "StartAt": "CheckInputMaxLabels",
                                     "States": {
-                                        "CheckS3ObjectName": {
+                                        "CheckInputMaxLabels": {
                                             "Type": "Choice",
                                             "Choices": [
                                                 {
                                                     "And": [
                                                         {
-                                                            "Variable": "$.Name",
+                                                            "Variable": "$.MaxLabels",
                                                             "IsPresent": true
                                                         },
                                                         {
-                                                            "Variable": "$.Name",
-                                                            "IsString": true
+                                                            "Variable": "$.MaxLabels",
+                                                            "IsNumeric": true
                                                         }
                                                     ],
-                                                    "Next": "TransformS3ObjectName"
+                                                    "Next": "CheckValueMaxLabels"
                                                 }
                                             ],
-                                            "Default": "FailCheckS3ObjectName"
+                                            "Default": "DefaultInputMaxLabels"
                                         },
-                                        "TransformS3ObjectName": {
+                                        "CheckValueMaxLabels": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$",
+                                                    "NumericGreaterThanEquals": 0,
+                                                    "Next": "PassValueMaxLabels"
+                                                }
+                                            ],
+                                            "Default": "FailCheckValueMaxLabels",
+                                            "InputPath": "$.MaxLabels"
+                                        },
+                                        "PassValueMaxLabels": {
                                             "Type": "Pass",
-                                            "End": true,
-                                            "InputPath": "$.Name"
+                                            "InputPath": "$.MaxLabels",
+                                            "End": true
                                         },
-                                        "FailCheckS3ObjectName": {
+                                        "FailCheckValueMaxLabels": {
                                             "Type": "Fail"
+                                        },
+                                        "DefaultInputMaxLabels": {
+                                            "Type": "Pass",
+                                            "Parameters": {
+                                                "MaxLabels": 0
+                                            },
+                                            "Next": "CheckValueMaxLabels"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckInputMinConfidence",
+                                    "States": {
+                                        "CheckInputMinConfidence": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.MinConfidence",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.MinConfidence",
+                                                            "IsNumeric": true
+                                                        }
+                                                    ],
+                                                    "Next": "CheckValueMinConfidence"
+                                                }
+                                            ],
+                                            "Default": "DefaultInputMinConfidence"
+                                        },
+                                        "CheckValueMinConfidence": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$",
+                                                            "NumericGreaterThanEquals": 0
+                                                        },
+                                                        {
+                                                            "Variable": "$",
+                                                            "NumericLessThanEquals": 100
+                                                        }
+                                                    ],
+                                                    "Next": "PassValueMinConfidence"
+                                                }
+                                            ],
+                                            "Default": "FailCheckValueMinConfidence"
+                                        },
+                                        "PassValueMinConfidence": {
+                                            "Type": "Pass",
+                                            "InputPath": "$.MinConfidence",
+                                            "End": true
+                                        },
+                                        "FailCheckValueMinConfidence": {
+                                            "Type": "Fail"
+                                        },
+                                        "DefaultInputMinConfidence": {
+                                            "Type": "Pass",
+                                            "Parameters": {
+                                                "MinConfidence": 50
+                                            },
+                                            "Next": "CheckValueMinConfidence"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckInputSettings",
+                                    "States": {
+                                        "CheckInputSettings": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Settings",
+                                                    "IsPresent": true,
+                                                    "Next": "ParallelCheckInputSettings"
+                                                }
+                                            ],
+                                            "Default": "DefaultInputSettings"
+                                        },
+                                        "ParallelCheckInputSettings": {
+                                            "Type": "Parallel",
+                                            "End": true,
+                                            "Branches": [
+                                                {
+                                                    "StartAt": "CheckInputGeneralLabels",
+                                                    "States": {
+                                                        "CheckInputGeneralLabels": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "Variable": "$.GeneralLabels",
+                                                                    "IsPresent": true,
+                                                                    "Next": "ParallelCheckInputGeneralLabels"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultInputGeneralLabels"
+                                                        },
+                                                        "ParallelCheckInputGeneralLabels": {
+                                                            "Type": "Parallel",
+                                                            "End": true,
+                                                            "Branches": [
+                                                                {
+                                                                    "StartAt": "CheckInputLabelCategoryExclusionFilters",
+                                                                    "States": {
+                                                                        "CheckInputLabelCategoryExclusionFilters": {
+                                                                            "Type": "Choice",
+                                                                            "Choices": [
+                                                                                {
+                                                                                    "Variable": "$.LabelCategoryExclusionFilters",
+                                                                                    "IsPresent": true,
+                                                                                    "Next": "MapInputLabelCategoryExclusionFilters"
+                                                                                }
+                                                                            ],
+                                                                            "Default": "DefaultInputLabelCategoryExclusionFilters"
+                                                                        },
+                                                                        "MapInputLabelCategoryExclusionFilters": {
+                                                                            "Type": "Map",
+                                                                            "ItemProcessor": {
+                                                                                "ProcessorConfig": {
+                                                                                    "Mode": "INLINE"
+                                                                                },
+                                                                                "StartAt": "CheckValueLabelCategoryExclusionFilter",
+                                                                                "States": {
+                                                                                    "CheckValueLabelCategoryExclusionFilter": {
+                                                                                        "Type": "Choice",
+                                                                                        "Choices": [
+                                                                                            {
+                                                                                                "And": [
+                                                                                                    {
+                                                                                                        "Variable": "$",
+                                                                                                        "IsString": true
+                                                                                                    }
+                                                                                                ],
+                                                                                                "Next": "PassValueLabelCategoryExclusionFilter"
+                                                                                            }
+                                                                                        ],
+                                                                                        "Default": "FailCheckValueLabelCategoryExclusionFilter"
+                                                                                    },
+                                                                                    "PassValueLabelCategoryExclusionFilter": {
+                                                                                        "Type": "Pass",
+                                                                                        "End": true
+                                                                                    },
+                                                                                    "FailCheckValueLabelCategoryExclusionFilter": {
+                                                                                        "Type": "Fail"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "End": true,
+                                                                            "ItemsPath": "$.LabelCategoryExclusionFilters"
+                                                                        },
+                                                                        "DefaultInputLabelCategoryExclusionFilters": {
+                                                                            "Type": "Pass",
+                                                                            "Parameters": {
+                                                                                "LabelCategoryExclusionFilters": []
+                                                                            },
+                                                                            "Next": "MapInputLabelCategoryExclusionFilters"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "StartAt": "CheckInputLabelCategoryInclusionFilters",
+                                                                    "States": {
+                                                                        "CheckInputLabelCategoryInclusionFilters": {
+                                                                            "Type": "Choice",
+                                                                            "Choices": [
+                                                                                {
+                                                                                    "Variable": "$.LabelCategoryInclusionFilters",
+                                                                                    "IsPresent": true,
+                                                                                    "Next": "MapInputLabelCategoryInclusionFilters"
+                                                                                }
+                                                                            ],
+                                                                            "Default": "DefaultLabelCategoryInclusionFilters"
+                                                                        },
+                                                                        "MapInputLabelCategoryInclusionFilters": {
+                                                                            "Type": "Map",
+                                                                            "ItemProcessor": {
+                                                                                "ProcessorConfig": {
+                                                                                    "Mode": "INLINE"
+                                                                                },
+                                                                                "StartAt": "CheckValueLabelCategoryInclusionFilter",
+                                                                                "States": {
+                                                                                    "CheckValueLabelCategoryInclusionFilter": {
+                                                                                        "Type": "Choice",
+                                                                                        "Choices": [
+                                                                                            {
+                                                                                                "Variable": "$",
+                                                                                                "IsString": true,
+                                                                                                "Next": "PassValueLabelCategoryInclusionFilter"
+                                                                                            }
+                                                                                        ],
+                                                                                        "Default": "FailCheckValueLabelCategoryInclusionFilter"
+                                                                                    },
+                                                                                    "PassValueLabelCategoryInclusionFilter": {
+                                                                                        "Type": "Pass",
+                                                                                        "End": true
+                                                                                    },
+                                                                                    "FailCheckValueLabelCategoryInclusionFilter": {
+                                                                                        "Type": "Fail"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "End": true,
+                                                                            "ItemsPath": "$.LabelCategoryInclusionFilters"
+                                                                        },
+                                                                        "DefaultLabelCategoryInclusionFilters": {
+                                                                            "Type": "Pass",
+                                                                            "Parameters": {
+                                                                                "LabelCategoryInclusionFilters": []
+                                                                            },
+                                                                            "Next": "MapInputLabelCategoryInclusionFilters"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "StartAt": "CheckInputLabelExclusionFilters",
+                                                                    "States": {
+                                                                        "CheckInputLabelExclusionFilters": {
+                                                                            "Type": "Choice",
+                                                                            "Choices": [
+                                                                                {
+                                                                                    "Variable": "$.LabelExclusionFilters",
+                                                                                    "IsPresent": true,
+                                                                                    "Next": "MapInputLabelExclusionFilters"
+                                                                                }
+                                                                            ],
+                                                                            "Default": "DefaultInputLabelExclusionFilters"
+                                                                        },
+                                                                        "MapInputLabelExclusionFilters": {
+                                                                            "Type": "Map",
+                                                                            "ItemProcessor": {
+                                                                                "ProcessorConfig": {
+                                                                                    "Mode": "INLINE"
+                                                                                },
+                                                                                "StartAt": "CheckValueLabelExclusionFilter",
+                                                                                "States": {
+                                                                                    "CheckValueLabelExclusionFilter": {
+                                                                                        "Type": "Choice",
+                                                                                        "Choices": [
+                                                                                            {
+                                                                                                "Variable": "$",
+                                                                                                "IsString": true,
+                                                                                                "Next": "PassValueLabelExclusionFilter"
+                                                                                            }
+                                                                                        ],
+                                                                                        "Default": "FailCheckValueLabelExclusionFilter"
+                                                                                    },
+                                                                                    "PassValueLabelExclusionFilter": {
+                                                                                        "Type": "Pass",
+                                                                                        "End": true
+                                                                                    },
+                                                                                    "FailCheckValueLabelExclusionFilter": {
+                                                                                        "Type": "Fail"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "End": true,
+                                                                            "ItemsPath": "$.LabelExclusionFilters"
+                                                                        },
+                                                                        "DefaultInputLabelExclusionFilters": {
+                                                                            "Type": "Pass",
+                                                                            "Parameters": {
+                                                                                "LabelExclusionFilters": []
+                                                                            },
+                                                                            "Next": "MapInputLabelExclusionFilters"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "StartAt": "CheckInputLabelInclusionFilters",
+                                                                    "States": {
+                                                                        "CheckInputLabelInclusionFilters": {
+                                                                            "Type": "Choice",
+                                                                            "Choices": [
+                                                                                {
+                                                                                    "Variable": "$.LabelInclusionFilters",
+                                                                                    "IsPresent": true,
+                                                                                    "Next": "MapInputLabelInclusionFilters"
+                                                                                }
+                                                                            ],
+                                                                            "Default": "DefaultInputLabelInclusionFilters"
+                                                                        },
+                                                                        "MapInputLabelInclusionFilters": {
+                                                                            "Type": "Map",
+                                                                            "ItemProcessor": {
+                                                                                "ProcessorConfig": {
+                                                                                    "Mode": "INLINE"
+                                                                                },
+                                                                                "StartAt": "CheckValueLabelInclusionFilter",
+                                                                                "States": {
+                                                                                    "CheckValueLabelInclusionFilter": {
+                                                                                        "Type": "Choice",
+                                                                                        "Choices": [
+                                                                                            {
+                                                                                                "Variable": "$",
+                                                                                                "IsString": true,
+                                                                                                "Next": "PassValueLabelInclusionFilter"
+                                                                                            }
+                                                                                        ],
+                                                                                        "Default": "FailCheckValueLabelInclusionFilter"
+                                                                                    },
+                                                                                    "PassValueLabelInclusionFilter": {
+                                                                                        "Type": "Pass",
+                                                                                        "End": true
+                                                                                    },
+                                                                                    "FailCheckValueLabelInclusionFilter": {
+                                                                                        "Type": "Fail"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "End": true,
+                                                                            "ItemsPath": "$.LabelInclusionFilters"
+                                                                        },
+                                                                        "DefaultInputLabelInclusionFilters": {
+                                                                            "Type": "Pass",
+                                                                            "Parameters": {
+                                                                                "LabelInclusionFilters": []
+                                                                            },
+                                                                            "Next": "MapInputLabelInclusionFilters"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ],
+                                                            "InputPath": "$.GeneralLabels",
+                                                            "ResultSelector": {
+                                                                "LabelCategoryExclusionFilters.$": "$[0]",
+                                                                "LabelCategoryInclusionFilters.$": "$[1]",
+                                                                "LabelExclusionFilters.$": "$[2]",
+                                                                "LabelInclusionFilters.$": "$[3]"
+                                                            }
+                                                        },
+                                                        "DefaultInputGeneralLabels": {
+                                                            "Type": "Pass",
+                                                            "Next": "ParallelCheckInputGeneralLabels",
+                                                            "Parameters": {
+                                                                "GeneralLabels": {}
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "StartAt": "CheckInputImageProperties",
+                                                    "States": {
+                                                        "CheckInputImageProperties": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "Variable": "$.ImageProperties",
+                                                                    "IsPresent": true,
+                                                                    "Next": "ParallelCheckInputImageProperties"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultInputImageProperties"
+                                                        },
+                                                        "ParallelCheckInputImageProperties": {
+                                                            "Type": "Parallel",
+                                                            "End": true,
+                                                            "Branches": [
+                                                                {
+                                                                    "StartAt": "CheckInputMaxDominantColors",
+                                                                    "States": {
+                                                                        "CheckInputMaxDominantColors": {
+                                                                            "Type": "Choice",
+                                                                            "Choices": [
+                                                                                {
+                                                                                    "And": [
+                                                                                        {
+                                                                                            "Variable": "$.MaxDominantColors",
+                                                                                            "IsPresent": true
+                                                                                        },
+                                                                                        {
+                                                                                            "Variable": "$.MaxDominantColors",
+                                                                                            "IsNumeric": true
+                                                                                        }
+                                                                                    ],
+                                                                                    "Next": "CheckValueMaxDominantColor"
+                                                                                }
+                                                                            ],
+                                                                            "Default": "DefaultInputMaxDominantColors"
+                                                                        },
+                                                                        "CheckValueMaxDominantColor": {
+                                                                            "Type": "Choice",
+                                                                            "Choices": [
+                                                                                {
+                                                                                    "And": [
+                                                                                        {
+                                                                                            "Variable": "$",
+                                                                                            "NumericGreaterThanEquals": 0
+                                                                                        },
+                                                                                        {
+                                                                                            "Variable": "$",
+                                                                                            "NumericGreaterThanEquals": 100
+                                                                                        }
+                                                                                    ],
+                                                                                    "Next": "PassValueMaxDominantColor"
+                                                                                }
+                                                                            ],
+                                                                            "Default": "FailCheckValueMaxDominantColor",
+                                                                            "InputPath": "$.MaxDominantColors"
+                                                                        },
+                                                                        "PassValueMaxDominantColor": {
+                                                                            "Type": "Pass",
+                                                                            "End": true
+                                                                        },
+                                                                        "FailCheckValueMaxDominantColor": {
+                                                                            "Type": "Fail"
+                                                                        },
+                                                                        "DefaultInputMaxDominantColors": {
+                                                                            "Type": "Pass",
+                                                                            "Parameters": {
+                                                                                "MaxDominantColors": 20
+                                                                            },
+                                                                            "Next": "CheckValueMaxDominantColor"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ],
+                                                            "InputPath": "$.ImageProperties",
+                                                            "ResultSelector": {
+                                                                "MaxDominantColors": "$[0]"
+                                                            }
+                                                        },
+                                                        "DefaultInputImageProperties": {
+                                                            "Type": "Pass",
+                                                            "Parameters": {
+                                                                "ImageProperties": {}
+                                                            },
+                                                            "Next": "ParallelCheckInputImageProperties"
+                                                        }
+                                                    }
+                                                }
+                                            ],
+                                            "InputPath": "$.Settings",
+                                            "ResultSelector": {
+                                                "GeneralLabels.$": "$[0]",
+                                                "ImageProperties.$": "$[1]"
+                                            }
+                                        },
+                                        "DefaultInputSettings": {
+                                            "Type": "Pass",
+                                            "Parameters": {
+                                                "Settings": {}
+                                            },
+                                            "Next": "ParallelCheckInputSettings"
                                         }
                                     }
                                 }
                             ],
                             "ResultSelector": {
-                                "S3Object": {
-                                    "Bucket.$": "$[0]",
-                                    "Name.$": "$[1]"
+                                "DetectLabels": {
+                                    "Features.$": "$[0]",
+                                    "MaxLabels.$": "$[1]",
+                                    "MinConfidence.$": "$[2]",
+                                    "Settings.$": "$[3]"
                                 }
                             },
-                            "InputPath": "$.S3Object"
+                            "InputPath": "$.DetectFaces"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckInputS3",
+                    "States": {
+                        "CheckInputS3": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.S3",
+                                    "IsPresent": true,
+                                    "Next": "ParallelCheckInputS3"
+                                }
+                            ],
+                            "Default": "FailCheckS3Input"
                         },
-                        "FailCheckS3Object": {
+                        "ParallelCheckInputS3": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "CheckInputBucket",
+                                    "States": {
+                                        "CheckInputBucket": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Bucket",
+                                                    "IsPresent": true,
+                                                    "Next": "CheckInputBucketName"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputBucket"
+                                        },
+                                        "CheckInputBucketName": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "HeadBucket"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputBucketName",
+                                            "InputPath": "$.Bucket"
+                                        },
+                                        "HeadBucket": {
+                                            "Type": "Task",
+                                            "Parameters": {
+                                                "Bucket.$": "$.Name"
+                                            },
+                                            "Resource": "arn:aws:states:::aws-sdk:s3:headBucket",
+                                            "Catch": [
+                                                {
+                                                    "ErrorEquals": [
+                                                        "States.TaskFailed"
+                                                    ],
+                                                    "Next": "FailHeadBucket"
+                                                }
+                                            ],
+                                            "ResultPath": "$.Output",
+                                            "Next": "PassHeadBucket"
+                                        },
+                                        "PassHeadBucket": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "AccessPointAlias.$": "$.Output.AccessPointAlias",
+                                                "Name.$": "$.Name",
+                                                "Region.$": "$.Output.BucketRegion"
+                                            }
+                                        },
+                                        "FailHeadBucket": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputBucketName": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputBucket": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckInputObject",
+                                    "States": {
+                                        "CheckInputObject": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Object",
+                                                    "IsPresent": true,
+                                                    "Next": "CheckInputKey"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputObject"
+                                        },
+                                        "CheckInputKey": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Key",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Key",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "PassInputKey"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputKey",
+                                            "InputPath": "$.Object"
+                                        },
+                                        "PassInputKey": {
+                                            "Type": "Pass",
+                                            "End": true
+                                        },
+                                        "FailCheckInputKey": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputObject": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                }
+                            ],
+                            "InputPath": "$.S3",
+                            "ResultSelector": {
+                                "Bucket.$": "$[0]",
+                                "Object.$": "$[1]"
+                            },
+                            "Next": "HeadObject"
+                        },
+                        "HeadObject": {
+                            "Type": "Task",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket.Name",
+                                "Key.$": "$.Object.Key"
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
+                            "ResultPath": "$.Output",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.TaskFailed"
+                                    ],
+                                    "Next": "FailHeadObject"
+                                }
+                            ],
+                            "Next": "PassHeadObject"
+                        },
+                        "PassHeadObject": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket",
+                                "Object.$": "States.JsonMerge($.Object, $.Output, false)"
+                            },
+                            "Next": "GetObjectAttributes"
+                        },
+                        "GetObjectAttributes": {
+                            "Type": "Task",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket.Name",
+                                "Key.$": "$.Object.Key",
+                                "ObjectAttributes": [
+                                    "Checksum",
+                                    "ETag",
+                                    "ObjectParts",
+                                    "ObjectSize",
+                                    "StorageClass"
+                                ]
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:s3:getObjectAttributes",
+                            "ResultPath": "$.Output",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.TaskFailed"
+                                    ],
+                                    "Next": "FailGetObjectAttributes"
+                                }
+                            ],
+                            "Next": "PassGetObjectAttributes"
+                        },
+                        "PassGetObjectAttributes": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket",
+                                "Object.$": "States.JsonMerge($.Object, $.Output, false)"
+                            }
+                        },
+                        "FailGetObjectAttributes": {
                             "Type": "Fail"
                         },
-                        "FailCheckImage": {
+                        "FailHeadObject": {
+                            "Type": "Fail"
+                        },
+                        "FailCheckS3Input": {
                             "Type": "Fail"
                         }
                     }
                 }
             ],
+            "Next": "DetectLabels",
             "ResultSelector": {
-                "Attributes.$": "$[0]",
-                "Image.$": "$[1]"
-            },
-            "Next": "DetectLabels"
+                "Rekognition.$": "$[0]",
+                "S3.$": "$[1]"
+            }
         },
         "DetectLabels": {
             "Type": "Task",
             "Parameters": {
-                "Attributes.$": "$.Attributes",
-                "Image.$": "$.Image"
+                "Features.$": "$.Rekognition.DetectLabels.Features",
+                "Image": {
+                    "S3Object": {
+                        "Bucket.$": "$.S3.Bucket.Name",
+                        "Name.$": "$.S3.Object.Key"
+                    }
+                },
+                "MaxLabels.$": "$.Rekognition.DetectLabels.MinConfidence",
+                "Settings.$": "$.Rekognition.DetectLabels.Settings"
             },
             "Resource": "arn:aws:states:::aws-sdk:rekognition:detectLabels",
+            "Next": "ParallelCheckOutputDetectLabels",
             "Catch": [
                 {
                     "ErrorEquals": [
@@ -172,26 +866,193 @@
                     "Next": "FailDetectLabels"
                 }
             ],
-            "Next": "ParallelLabels",
-            "ResultPath": "$.DetectLabels"
+            "ResultPath": "$.Output"
         },
-        "ParallelLabels": {
+        "ParallelCheckOutputDetectLabels": {
             "Type": "Parallel",
-            "End": true,
             "Branches": [
                 {
-                    "StartAt": "Pass",
+                    "StartAt": "CheckOutputImageProperties",
                     "States": {
-                        "Pass": {
+                        "CheckOutputImageProperties": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.ImageProperties",
+                                    "IsPresent": true,
+                                    "Next": "ParallelCheckOutputImageProperties"
+                                }
+                            ],
+                            "Default": "DefaultOutputImageProperties",
+                            "InputPath": "$.Output"
+                        },
+                        "ParallelCheckOutputImageProperties": {
+                            "Type": "Parallel",
+                            "End": true,
+                            "Branches": [
+                                {
+                                    "StartAt": "Pass (1)",
+                                    "States": {
+                                        "Pass (1)": {
+                                            "Type": "Pass",
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ],
+                            "InputPath": "$.ImageProperties"
+                        },
+                        "DefaultOutputImageProperties": {
                             "Type": "Pass",
+                            "Parameters": {
+                                "ImageProperties": {}
+                            },
                             "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputLabelModelVersion",
+                    "States": {
+                        "CheckOutputLabelModelVersion": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.LabelModelVersion",
+                                    "IsPresent": true,
+                                    "Next": "PassOutputLabelModelVersion"
+                                }
+                            ],
+                            "Default": "DefaultOutputLabelModelVersion"
+                        },
+                        "PassOutputLabelModelVersion": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.LabelModelVersion"
+                        },
+                        "DefaultOutputLabelModelVersion": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "LabelModelVersion": null
+                            },
+                            "OutputPath": "$.LabelModelVersion"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputLabels",
+                    "States": {
+                        "CheckOutputLabels": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.Labels",
+                                    "IsPresent": true,
+                                    "Next": "MapLabels"
+                                }
+                            ],
+                            "Default": "DefaultOutputLabels"
+                        },
+                        "MapLabels": {
+                            "Type": "Map",
+                            "ItemProcessor": {
+                                "ProcessorConfig": {
+                                    "Mode": "INLINE"
+                                },
+                                "StartAt": "ParallelCheckOutputLabel",
+                                "States": {
+                                    "ParallelCheckOutputLabel": {
+                                        "Type": "Parallel",
+                                        "End": true,
+                                        "Branches": [
+                                            {
+                                                "StartAt": "CheckOutputAliases",
+                                                "States": {
+                                                    "CheckOutputAliases": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Aliases",
+                                                                "IsPresent": true,
+                                                                "Next": "PassOutputAliases"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputAliases"
+                                                    },
+                                                    "PassOutputAliases": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Aliases"
+                                                    },
+                                                    "DefaultOutputAliases": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Aliases": null
+                                                        },
+                                                        "OutputPath": "$.Aliases"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "ResultSelector": {
+                                            "Aliases.$": "$[0]"
+                                        }
+                                    }
+                                }
+                            },
+                            "End": true,
+                            "ItemsPath": "$.Labels"
+                        },
+                        "DefaultOutputLabels": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "Labels": null
+                            },
+                            "OutputPath": "$.Labels"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputOrientationCorrection",
+                    "States": {
+                        "CheckOutputOrientationCorrection": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.OrientationCorrection",
+                                    "IsPresent": true,
+                                    "Next": "PassOrientationCorrection"
+                                }
+                            ],
+                            "Default": "DefaultOutputOrientationCorrection",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOrientationCorrection": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.OrientationCorrection"
+                        },
+                        "DefaultOutputOrientationCorrection": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "OrientationCorrection": null
+                            },
+                            "Next": "PassOrientationCorrection"
                         }
                     }
                 }
             ],
             "ResultSelector": {
-                "create_at.$": "$$.Execution.StartTime"
-            }
+                "ImageProperties.$": "$[0]",
+                "LabelModelVersion.$": "$[1]",
+                "Labels.$": "$[2]",
+                "OrientationCorrection.$": "$[1]"
+            },
+            "ResultPath": "$.Output",
+            "End": true
         },
         "FailDetectLabels": {
             "Type": "Fail"
