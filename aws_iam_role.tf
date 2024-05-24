@@ -1,6 +1,6 @@
-resource "aws_iam_role" "pipes_pipe_s3_object_created_images" {
-  assume_role_policy = data.aws_iam_policy_document.assume_role_pipes_pipe_s3_object_created_images.json
-  name               = "${local.organization}-pipes-pipe-s3-object-created-images"
+resource "aws_iam_role" "sfn_state_machine_rekognition_detect_faces" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role_sfn_state_machine_rekognition_detect_faces.json
+  name               = "${local.organization}-sfn-state-machine-rekognition-detect-faces"
   path               = "/${local.organization}/"
   tags = {
     caller_identity_account_arn = data.aws_caller_identity.main.arn
@@ -13,9 +13,9 @@ resource "aws_iam_role" "pipes_pipe_s3_object_created_images" {
   }
 }
 
-resource "aws_iam_role" "sfn_state_machine_s3_object_created_images" {
-  assume_role_policy = data.aws_iam_policy_document.assume_role_sfn_state_machine_s3_object_created_images.json
-  name               = "${local.organization}-sfn-state-machine-s3-object-created-images"
+resource "aws_iam_role" "sfn_state_machine_rekognition_detect_labels" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role_sfn_state_machine_rekognition_detect_labels.json
+  name               = "${local.organization}-sfn-state-machine-rekognition-detect-labels"
   path               = "/${local.organization}/"
   tags = {
     caller_identity_account_arn = data.aws_caller_identity.main.arn
