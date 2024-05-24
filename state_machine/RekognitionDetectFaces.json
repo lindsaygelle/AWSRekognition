@@ -432,13 +432,13 @@
                                 {
                                     "Variable": "$.FaceDetails",
                                     "IsPresent": true,
-                                    "Next": "MapFaceDetails"
+                                    "Next": "MapOutputFaceDetails"
                                 }
                             ],
                             "Default": "DefaultOutputFaceDetails",
                             "InputPath": "$.Output"
                         },
-                        "MapFaceDetails": {
+                        "MapOutputFaceDetails": {
                             "Type": "Map",
                             "ItemProcessor": {
                                 "ProcessorConfig": {
@@ -451,25 +451,25 @@
                                         "End": true,
                                         "Branches": [
                                             {
-                                                "StartAt": "CheckOutputAgeRange",
+                                                "StartAt": "CheckOutputFaceDetailAgeRange",
                                                 "States": {
-                                                    "CheckOutputAgeRange": {
+                                                    "CheckOutputFaceDetailAgeRange": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.AgeRange",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputAgeRange"
+                                                                "Next": "PassOutputFaceDetailAgeRange"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputAgeRange"
+                                                        "Default": "DefaultOutputFaceDetailAgeRange"
                                                     },
-                                                    "PassOutputAgeRange": {
+                                                    "PassOutputFaceDetailAgeRange": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.AgeRange"
                                                     },
-                                                    "DefaultOutputAgeRange": {
+                                                    "DefaultOutputFaceDetailAgeRange": {
                                                         "Type": "Pass",
                                                         "Parameters": {
                                                             "AgeRange": null
@@ -480,25 +480,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputBeard",
+                                                "StartAt": "CheckOutputFaceDetailBeard",
                                                 "States": {
-                                                    "CheckOutputBeard": {
+                                                    "CheckOutputFaceDetailBeard": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Beard",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputBeard"
+                                                                "Next": "PassOutputFaceDetailBeard"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputBeard"
+                                                        "Default": "DefaultOutputFaceDetailBeard"
                                                     },
-                                                    "PassOutputBeard": {
+                                                    "PassOutputFaceDetailBeard": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Beard"
                                                     },
-                                                    "DefaultOutputBeard": {
+                                                    "DefaultOutputFaceDetailBeard": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -509,25 +509,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputBoundingBox",
+                                                "StartAt": "CheckOutputFaceDetailBoundingBox",
                                                 "States": {
-                                                    "CheckOutputBoundingBox": {
+                                                    "CheckOutputFaceDetailBoundingBox": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.BoundingBox",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputBoundingBox"
+                                                                "Next": "PassOutputFaceDetailBoundingBox"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputBoundingBox"
+                                                        "Default": "DefaultOutputFaceDetailBoundingBox"
                                                     },
-                                                    "PassOutputBoundingBox": {
+                                                    "PassOutputFaceDetailBoundingBox": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.BoundingBox"
                                                     },
-                                                    "DefaultOutputBoundingBox": {
+                                                    "DefaultOutputFaceDetailBoundingBox": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -538,9 +538,9 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "PassOutputConfidence",
+                                                "StartAt": "PassOutputFaceDetailConfidence",
                                                 "States": {
-                                                    "PassOutputConfidence": {
+                                                    "PassOutputFaceDetailConfidence": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Confidence"
@@ -548,25 +548,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputEmotions",
+                                                "StartAt": "CheckOutputFaceDetailEmotions",
                                                 "States": {
-                                                    "CheckOutputEmotions": {
+                                                    "CheckOutputFaceDetailEmotions": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Emotions",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputEmotions"
+                                                                "Next": "PassOutputFaceDetailEmotions"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputEmotions"
+                                                        "Default": "DefaultOutputFaceDetailEmotions"
                                                     },
-                                                    "PassOutputEmotions": {
+                                                    "PassOutputFaceDetailEmotions": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Emotions"
                                                     },
-                                                    "DefaultOutputEmotions": {
+                                                    "DefaultOutputFaceDetailEmotions": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -577,25 +577,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputEyeDirection",
+                                                "StartAt": "CheckOutputFaceDetailEyeDirection",
                                                 "States": {
-                                                    "CheckOutputEyeDirection": {
+                                                    "CheckOutputFaceDetailEyeDirection": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.EyeDirection",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputEyeDirection"
+                                                                "Next": "PassOutputFaceDetailEyeDirection"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputEyeDirection"
+                                                        "Default": "DefaultOutputFaceDetailEyeDirection"
                                                     },
-                                                    "PassOutputEyeDirection": {
+                                                    "PassOutputFaceDetailEyeDirection": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.EyeDirection"
                                                     },
-                                                    "DefaultOutputEyeDirection": {
+                                                    "DefaultOutputFaceDetailEyeDirection": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -606,25 +606,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputEyeglasses",
+                                                "StartAt": "CheckOutputFaceDetailEyeglasses",
                                                 "States": {
-                                                    "CheckOutputEyeglasses": {
+                                                    "CheckOutputFaceDetailEyeglasses": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Eyeglasses",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputEyeglasses"
+                                                                "Next": "PassOutputFaceDetailEyeglasses"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputEyeglasses"
+                                                        "Default": "DefaultOutputFaceDetailEyeglasses"
                                                     },
-                                                    "PassOutputEyeglasses": {
+                                                    "PassOutputFaceDetailEyeglasses": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Eyeglasses"
                                                     },
-                                                    "DefaultOutputEyeglasses": {
+                                                    "DefaultOutputFaceDetailEyeglasses": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -635,25 +635,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputEyesOpen",
+                                                "StartAt": "CheckOutputFaceDetailEyesOpen",
                                                 "States": {
-                                                    "CheckOutputEyesOpen": {
+                                                    "CheckOutputFaceDetailEyesOpen": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.EyesOpen",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputEyesOpen"
+                                                                "Next": "PassOutputFaceDetailEyesOpen"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputEyesOpen"
+                                                        "Default": "DefaultOutputFaceDetailEyesOpen"
                                                     },
-                                                    "PassOutputEyesOpen": {
+                                                    "PassOutputFaceDetailEyesOpen": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.EyesOpen"
                                                     },
-                                                    "DefaultOutputEyesOpen": {
+                                                    "DefaultOutputFaceDetailEyesOpen": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -664,25 +664,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputFaceOccluded",
+                                                "StartAt": "CheckOutputFaceDetailFaceOccluded",
                                                 "States": {
-                                                    "CheckOutputFaceOccluded": {
+                                                    "CheckOutputFaceDetailFaceOccluded": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.FaceOccluded",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputFaceOccluded"
+                                                                "Next": "PassOutputFaceDetailFaceOccluded"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputFaceOccluded"
+                                                        "Default": "DefaultOutputFaceDetailFaceOccluded"
                                                     },
-                                                    "PassOutputFaceOccluded": {
+                                                    "PassOutputFaceDetailFaceOccluded": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.FaceOccluded"
                                                     },
-                                                    "DefaultOutputFaceOccluded": {
+                                                    "DefaultOutputFaceDetailFaceOccluded": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -693,25 +693,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputGender",
+                                                "StartAt": "CheckOutputFaceDetailGender",
                                                 "States": {
-                                                    "CheckOutputGender": {
+                                                    "CheckOutputFaceDetailGender": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Gender",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputGender"
+                                                                "Next": "PassOutputFaceDetailGender"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputGender"
+                                                        "Default": "DefaultOutputFaceDetailGender"
                                                     },
-                                                    "PassOutputGender": {
+                                                    "PassOutputFaceDetailGender": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Gender"
                                                     },
-                                                    "DefaultOutputGender": {
+                                                    "DefaultOutputFaceDetailGender": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -722,9 +722,9 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "PassOutputIdParameters",
+                                                "StartAt": "PassOutputFaceDetailIdParameters",
                                                 "States": {
-                                                    "PassOutputIdParameters": {
+                                                    "PassOutputFaceDetailIdParameters": {
                                                         "Type": "Pass",
                                                         "Parameters": {
                                                             "BoundingBox.$": "$.BoundingBox",
@@ -733,9 +733,9 @@
                                                             "Quality.$": "$.Quality",
                                                             "Landmarks.$": "$.Landmarks"
                                                         },
-                                                        "Next": "DefaultOutputId"
+                                                        "Next": "DefaultOutputFaceDetailId"
                                                     },
-                                                    "DefaultOutputId": {
+                                                    "DefaultOutputFaceDetailId": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -746,25 +746,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputLandmarks",
+                                                "StartAt": "CheckOutputFaceDetailLandmarks",
                                                 "States": {
-                                                    "CheckOutputLandmarks": {
+                                                    "CheckOutputFaceDetailLandmarks": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Landmarks",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputLandmarks"
+                                                                "Next": "PassOutputFaceDetailLandmarks"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputLandmarks"
+                                                        "Default": "DefaultOutputFaceDetailLandmarks"
                                                     },
-                                                    "PassOutputLandmarks": {
+                                                    "PassOutputFaceDetailLandmarks": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Landmarks"
                                                     },
-                                                    "DefaultOutputLandmarks": {
+                                                    "DefaultOutputFaceDetailLandmarks": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -775,25 +775,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputMouthOpen",
+                                                "StartAt": "CheckOutputFaceDetailMouthOpen",
                                                 "States": {
-                                                    "CheckOutputMouthOpen": {
+                                                    "CheckOutputFaceDetailMouthOpen": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.MouthOpen",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputMouthOpen"
+                                                                "Next": "PassOutputFaceDetailMouthOpen"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputMouthOpen"
+                                                        "Default": "DefaultOutputFaceDetailMouthOpen"
                                                     },
-                                                    "PassOutputMouthOpen": {
+                                                    "PassOutputFaceDetailMouthOpen": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.MouthOpen"
                                                     },
-                                                    "DefaultOutputMouthOpen": {
+                                                    "DefaultOutputFaceDetailMouthOpen": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -804,25 +804,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputMustache",
+                                                "StartAt": "CheckOutputFaceDetailMustache",
                                                 "States": {
-                                                    "CheckOutputMustache": {
+                                                    "CheckOutputFaceDetailMustache": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Mustache",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputMustache"
+                                                                "Next": "PassOutputFaceDetailMustache"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputMustache"
+                                                        "Default": "DefaultOutputFaceDetailMustache"
                                                     },
-                                                    "PassOutputMustache": {
+                                                    "PassOutputFaceDetailMustache": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Mustache"
                                                     },
-                                                    "DefaultOutputMustache": {
+                                                    "DefaultOutputFaceDetailMustache": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -833,25 +833,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputPose",
+                                                "StartAt": "CheckOutputFaceDetailPose",
                                                 "States": {
-                                                    "CheckOutputPose": {
+                                                    "CheckOutputFaceDetailPose": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Pose",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputPose"
+                                                                "Next": "PassOutputFaceDetailPose"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputPose"
+                                                        "Default": "DefaultOutputFaceDetailPose"
                                                     },
-                                                    "PassOutputPose": {
+                                                    "PassOutputFaceDetailPose": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Pose"
                                                     },
-                                                    "DefaultOutputPose": {
+                                                    "DefaultOutputFaceDetailPose": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -862,25 +862,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputQuality",
+                                                "StartAt": "CheckOutputFaceDetailQuality",
                                                 "States": {
-                                                    "CheckOutputQuality": {
+                                                    "CheckOutputFaceDetailQuality": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Quality",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputQuality"
+                                                                "Next": "PassOutputFaceDetailQuality"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputQuality"
+                                                        "Default": "DefaultOutputFaceDetailQuality"
                                                     },
-                                                    "PassOutputQuality": {
+                                                    "PassOutputFaceDetailQuality": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Quality"
                                                     },
-                                                    "DefaultOutputQuality": {
+                                                    "DefaultOutputFaceDetailQuality": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -891,25 +891,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputSmile",
+                                                "StartAt": "CheckOutputFaceDetailSmile",
                                                 "States": {
-                                                    "CheckOutputSmile": {
+                                                    "CheckOutputFaceDetailSmile": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Smile",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputSmile"
+                                                                "Next": "PassOutputFaceDetailSmile"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputSmile"
+                                                        "Default": "DefaultOutputFaceDetailSmile"
                                                     },
-                                                    "PassOutputSmile": {
+                                                    "PassOutputFaceDetailSmile": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Smile"
                                                     },
-                                                    "DefaultOutputSmile": {
+                                                    "DefaultOutputFaceDetailSmile": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -920,25 +920,25 @@
                                                 }
                                             },
                                             {
-                                                "StartAt": "CheckOutputSunglasses",
+                                                "StartAt": "CheckOutputFaceDetailSunglasses",
                                                 "States": {
-                                                    "CheckOutputSunglasses": {
+                                                    "CheckOutputFaceDetailSunglasses": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Sunglasses",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputSunglasses"
+                                                                "Next": "PassOutputFaceDetailSunglasses"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputSunglasses"
+                                                        "Default": "DefaultOutputFaceDetailSunglasses"
                                                     },
-                                                    "PassOutputSunglasses": {
+                                                    "PassOutputFaceDetailSunglasses": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Sunglasses"
                                                     },
-                                                    "DefaultOutputSunglasses": {
+                                                    "DefaultOutputFaceDetailSunglasses": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -980,7 +980,7 @@
                             "Parameters": {
                                 "FaceDetails": []
                             },
-                            "Next": "MapFaceDetails"
+                            "Next": "MapOutputFaceDetails"
                         }
                     }
                 },
