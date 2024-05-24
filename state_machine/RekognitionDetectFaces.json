@@ -68,9 +68,9 @@
                                                 "ProcessorConfig": {
                                                     "Mode": "INLINE"
                                                 },
-                                                "StartAt": "CheckInputAttribute",
+                                                "StartAt": "CheckValueAttribute",
                                                 "States": {
-                                                    "CheckInputAttribute": {
+                                                    "CheckValueAttribute": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
@@ -140,16 +140,16 @@
                                                                         ]
                                                                     }
                                                                 ],
-                                                                "Next": "PassInputAttribute"
+                                                                "Next": "PassValueAttribute"
                                                             }
                                                         ],
-                                                        "Default": "FailCheckInputAttribute"
+                                                        "Default": "FailCheckValueAttribute"
                                                     },
-                                                    "PassInputAttribute": {
+                                                    "PassValueAttribute": {
                                                         "Type": "Pass",
                                                         "End": true
                                                     },
-                                                    "FailCheckInputAttribute": {
+                                                    "FailCheckValueAttribute": {
                                                         "Type": "Fail"
                                                     }
                                                 }
