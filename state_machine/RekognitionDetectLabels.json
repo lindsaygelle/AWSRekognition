@@ -157,7 +157,6 @@
                                         },
                                         "PassValueMaxLabels": {
                                             "Type": "Pass",
-                                            "InputPath": "$.MaxLabels",
                                             "End": true
                                         },
                                         "FailCheckValueMaxLabels": {
@@ -211,11 +210,11 @@
                                                     "Next": "PassValueMinConfidence"
                                                 }
                                             ],
-                                            "Default": "FailCheckValueMinConfidence"
+                                            "Default": "FailCheckValueMinConfidence",
+                                            "InputPath": "$.MinConfidence"
                                         },
                                         "PassValueMinConfidence": {
                                             "Type": "Pass",
-                                            "InputPath": "$.MinConfidence",
                                             "End": true
                                         },
                                         "FailCheckValueMinConfidence": {
@@ -555,7 +554,7 @@
                                                                                         },
                                                                                         {
                                                                                             "Variable": "$",
-                                                                                            "NumericGreaterThanEquals": 100
+                                                                                            "NumericLessThanEquals": 100
                                                                                         }
                                                                                     ],
                                                                                     "Next": "PassValueMaxDominantColor"
@@ -583,7 +582,7 @@
                                                             ],
                                                             "InputPath": "$.ImageProperties",
                                                             "ResultSelector": {
-                                                                "MaxDominantColors": "$[0]"
+                                                                "MaxDominantColors.$": "$[0]"
                                                             }
                                                         },
                                                         "DefaultInputImageProperties": {
@@ -891,16 +890,257 @@
                             "End": true,
                             "Branches": [
                                 {
-                                    "StartAt": "Pass (1)",
+                                    "StartAt": "CheckOutputImagePropertiesBackground",
                                     "States": {
-                                        "Pass (1)": {
+                                        "CheckOutputImagePropertiesBackground": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Background",
+                                                    "IsPresent": true,
+                                                    "Next": "ParallelOutputImagePropertiesBackground"
+                                                }
+                                            ],
+                                            "Default": "DefaultOutputImagePropertiesBackground"
+                                        },
+                                        "ParallelOutputImagePropertiesBackground": {
+                                            "Type": "Parallel",
+                                            "End": true,
+                                            "Branches": [
+                                                {
+                                                    "StartAt": "CheckOutputImagePropertiesBackgroundDominantColors",
+                                                    "States": {
+                                                        "CheckOutputImagePropertiesBackgroundDominantColors": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "Variable": "$.DominantColors",
+                                                                    "IsPresent": true,
+                                                                    "Next": "PassOutputImagePropertiesBackgroundDominantColors"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultOutputImagePropertiesBackgroundDominantColors"
+                                                        },
+                                                        "PassOutputImagePropertiesBackgroundDominantColors": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "InputPath": "$.DominantColors"
+                                                        },
+                                                        "DefaultOutputImagePropertiesBackgroundDominantColors": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "Parameters": {
+                                                                "DominantColors": null
+                                                            },
+                                                            "OutputPath": "$.DominantColors"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "StartAt": "CheckOutputImagePropertiesBackgroundQuality",
+                                                    "States": {
+                                                        "CheckOutputImagePropertiesBackgroundQuality": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "Variable": "$.Quality",
+                                                                    "IsPresent": true,
+                                                                    "Next": "PassOutputImagePropertiesBackgroundQuality"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultOutputImagePropertiesBackgroundQuality"
+                                                        },
+                                                        "PassOutputImagePropertiesBackgroundQuality": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "InputPath": "$.Quality"
+                                                        },
+                                                        "DefaultOutputImagePropertiesBackgroundQuality": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "Parameters": {
+                                                                "Quality": null
+                                                            },
+                                                            "OutputPath": "$.Quality"
+                                                        }
+                                                    }
+                                                }
+                                            ],
+                                            "InputPath": "$.Background",
+                                            "ResultSelector": {
+                                                "DominantColors.$": "$[0]",
+                                                "Quality.$": "$[1]"
+                                            }
+                                        },
+                                        "DefaultOutputImagePropertiesBackground": {
                                             "Type": "Pass",
-                                            "End": true
+                                            "End": true,
+                                            "Parameters": {
+                                                "Background": null
+                                            },
+                                            "OutputPath": "$.Background"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckOutputImagePropertiesDominantColors",
+                                    "States": {
+                                        "CheckOutputImagePropertiesDominantColors": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.DominantColors",
+                                                    "IsPresent": true,
+                                                    "Next": "PassOutputImagePropertiesDominantColors"
+                                                }
+                                            ],
+                                            "Default": "DefaultOutputImagePropertiesDominantColors"
+                                        },
+                                        "PassOutputImagePropertiesDominantColors": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.DominantColors"
+                                        },
+                                        "DefaultOutputImagePropertiesDominantColors": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "DominantColors": []
+                                            },
+                                            "OutputPath": "$.DominantColors"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckOutputImagePropertiesForeground",
+                                    "States": {
+                                        "CheckOutputImagePropertiesForeground": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Foreground",
+                                                    "IsPresent": true,
+                                                    "Next": "ParallelCheckOutputImagePropertiesForeground"
+                                                }
+                                            ],
+                                            "Default": "DefaultOutputImagePropertiesForeground"
+                                        },
+                                        "ParallelCheckOutputImagePropertiesForeground": {
+                                            "Type": "Parallel",
+                                            "End": true,
+                                            "Branches": [
+                                                {
+                                                    "StartAt": "CheckOutputImagePropertiesForegroundDominantColors",
+                                                    "States": {
+                                                        "CheckOutputImagePropertiesForegroundDominantColors": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "Variable": "$.DominatColors",
+                                                                    "IsPresent": true,
+                                                                    "Next": "PassOutputImagePropertiesForegroundDominantColors"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultOutputImagePropertiesForegroundDominantColors"
+                                                        },
+                                                        "PassOutputImagePropertiesForegroundDominantColors": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "InputPath": "$.DominantColors"
+                                                        },
+                                                        "DefaultOutputImagePropertiesForegroundDominantColors": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "Parameters": {
+                                                                "DominantColors": null
+                                                            },
+                                                            "OutputPath": "$.DominantColors"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "StartAt": "CheckOutputImagePropertiesForegroundQuality",
+                                                    "States": {
+                                                        "CheckOutputImagePropertiesForegroundQuality": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "Variable": "$.Quality",
+                                                                    "IsPresent": true,
+                                                                    "Next": "PassCheckOutputImagePropertiesForegroundQuality"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultCheckOutputImagePropertiesForegroundQuality"
+                                                        },
+                                                        "PassCheckOutputImagePropertiesForegroundQuality": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "InputPath": "$.Quality"
+                                                        },
+                                                        "DefaultCheckOutputImagePropertiesForegroundQuality": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "Parameters": {
+                                                                "Quality": null
+                                                            },
+                                                            "OutputPath": "$.Quality"
+                                                        }
+                                                    }
+                                                }
+                                            ],
+                                            "InputPath": "$.Foreground",
+                                            "ResultSelector": {
+                                                "DominantColors.$": "$[0]",
+                                                "Quality.$": "$[1]"
+                                            }
+                                        },
+                                        "DefaultOutputImagePropertiesForeground": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "Foreground": null
+                                            },
+                                            "OutputPath": "$.Foreground"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckOutputImagePropertiesQuality",
+                                    "States": {
+                                        "CheckOutputImagePropertiesQuality": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Quality",
+                                                    "IsPresent": true,
+                                                    "Next": "PassOutputImagePropertiesQuality"
+                                                }
+                                            ],
+                                            "Default": "DefaultOutputImagePropertiesQuality"
+                                        },
+                                        "PassOutputImagePropertiesQuality": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.Quality"
+                                        },
+                                        "DefaultOutputImagePropertiesQuality": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "Quality": null
+                                            },
+                                            "OutputPath": "$.Quality"
                                         }
                                     }
                                 }
                             ],
-                            "InputPath": "$.ImageProperties"
+                            "InputPath": "$.ImageProperties",
+                            "ResultSelector": {
+                                "Background.$": "$[0]",
+                                "DominantColors.$": "$[1]",
+                                "Foreground.$": "$[2]",
+                                "Quality.$": "$[3]"
+                            }
                         },
                         "DefaultOutputImageProperties": {
                             "Type": "Pass",
@@ -923,7 +1163,8 @@
                                     "Next": "PassOutputLabelModelVersion"
                                 }
                             ],
-                            "Default": "DefaultOutputLabelModelVersion"
+                            "Default": "DefaultOutputLabelModelVersion",
+                            "InputPath": "$.Output"
                         },
                         "PassOutputLabelModelVersion": {
                             "Type": "Pass",
@@ -949,12 +1190,13 @@
                                 {
                                     "Variable": "$.Labels",
                                     "IsPresent": true,
-                                    "Next": "MapLabels"
+                                    "Next": "MapOutputLabels"
                                 }
                             ],
-                            "Default": "DefaultOutputLabels"
+                            "Default": "DefaultOutputLabels",
+                            "InputPath": "$.Output"
                         },
-                        "MapLabels": {
+                        "MapOutputLabels": {
                             "Type": "Map",
                             "ItemProcessor": {
                                 "ProcessorConfig": {
@@ -967,25 +1209,25 @@
                                         "End": true,
                                         "Branches": [
                                             {
-                                                "StartAt": "CheckOutputAliases",
+                                                "StartAt": "CheckOutputLabelAliases",
                                                 "States": {
-                                                    "CheckOutputAliases": {
+                                                    "CheckOutputLabelAliases": {
                                                         "Type": "Choice",
                                                         "Choices": [
                                                             {
                                                                 "Variable": "$.Aliases",
                                                                 "IsPresent": true,
-                                                                "Next": "PassOutputAliases"
+                                                                "Next": "PassOutputLabelAliases"
                                                             }
                                                         ],
-                                                        "Default": "DefaultOutputAliases"
+                                                        "Default": "DefaultOutputLabelAliases"
                                                     },
-                                                    "PassOutputAliases": {
+                                                    "PassOutputLabelAliases": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "InputPath": "$.Aliases"
                                                     },
-                                                    "DefaultOutputAliases": {
+                                                    "DefaultOutputLabelAliases": {
                                                         "Type": "Pass",
                                                         "End": true,
                                                         "Parameters": {
@@ -994,10 +1236,264 @@
                                                         "OutputPath": "$.Aliases"
                                                     }
                                                 }
+                                            },
+                                            {
+                                                "StartAt": "CheckOutputLabelCategories",
+                                                "States": {
+                                                    "CheckOutputLabelCategories": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Categories",
+                                                                "IsPresent": true,
+                                                                "Next": "PassOutputLabelCategories"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputLabelCategories"
+                                                    },
+                                                    "PassOutputLabelCategories": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Categories"
+                                                    },
+                                                    "DefaultOutputLabelCategories": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Categories": null
+                                                        },
+                                                        "OutputPath": "$.Categories"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckOutputLabelConfidence",
+                                                "States": {
+                                                    "CheckOutputLabelConfidence": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Confidence",
+                                                                "IsPresent": true,
+                                                                "Next": "PassOutputLabelConfidence"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputLabelConfidence"
+                                                    },
+                                                    "PassOutputLabelConfidence": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Confidence"
+                                                    },
+                                                    "DefaultOutputLabelConfidence": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Confidence": null
+                                                        },
+                                                        "OutputPath": "$.Confidence"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckOutputLabelInstances",
+                                                "States": {
+                                                    "CheckOutputLabelInstances": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Instances",
+                                                                "IsPresent": true,
+                                                                "Next": "MapOutputLabelInstances"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputLabelInstances"
+                                                    },
+                                                    "MapOutputLabelInstances": {
+                                                        "Type": "Map",
+                                                        "ItemProcessor": {
+                                                            "ProcessorConfig": {
+                                                                "Mode": "INLINE"
+                                                            },
+                                                            "StartAt": "ParallelCheckOutputLabelInstance",
+                                                            "States": {
+                                                                "ParallelCheckOutputLabelInstance": {
+                                                                    "Type": "Parallel",
+                                                                    "End": true,
+                                                                    "Branches": [
+                                                                        {
+                                                                            "StartAt": "CheckOutputLabelInstanceBoundingBox",
+                                                                            "States": {
+                                                                                "CheckOutputLabelInstanceBoundingBox": {
+                                                                                    "Type": "Choice",
+                                                                                    "Choices": [
+                                                                                        {
+                                                                                            "Variable": "$.BoundingBox",
+                                                                                            "IsPresent": true,
+                                                                                            "Next": "PassOutputLabelInstanceBoundingBox"
+                                                                                        }
+                                                                                    ],
+                                                                                    "Default": "DefaultOutputLabelInstanceBoundingBox"
+                                                                                },
+                                                                                "PassOutputLabelInstanceBoundingBox": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "InputPath": "$.BoundingBox"
+                                                                                },
+                                                                                "DefaultOutputLabelInstanceBoundingBox": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "BoundingBox": null
+                                                                                    },
+                                                                                    "OutputPath": "$.BoundingBox"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "CheckOutputLabelInstanceConfidence",
+                                                                            "States": {
+                                                                                "CheckOutputLabelInstanceConfidence": {
+                                                                                    "Type": "Choice",
+                                                                                    "Choices": [
+                                                                                        {
+                                                                                            "Variable": "$.Confidence",
+                                                                                            "IsPresent": true,
+                                                                                            "Next": "PassOutputLabelInstanceConfidence"
+                                                                                        }
+                                                                                    ],
+                                                                                    "Default": "DefaultOutputLabelInstanceConfidence"
+                                                                                },
+                                                                                "PassOutputLabelInstanceConfidence": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "InputPath": "$.Confidence"
+                                                                                },
+                                                                                "DefaultOutputLabelInstanceConfidence": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "Confidence": null
+                                                                                    },
+                                                                                    "OutputPath": "$.Confidence"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "CheckOutputLabelInstanceDominantColors",
+                                                                            "States": {
+                                                                                "CheckOutputLabelInstanceDominantColors": {
+                                                                                    "Type": "Choice",
+                                                                                    "Choices": [
+                                                                                        {
+                                                                                            "Variable": "$.DominantColors",
+                                                                                            "IsPresent": true,
+                                                                                            "Next": "PassOutputLabelInstanceDominantColors"
+                                                                                        }
+                                                                                    ],
+                                                                                    "Default": "DefaultOutputLabelInstanceDominantColors"
+                                                                                },
+                                                                                "PassOutputLabelInstanceDominantColors": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "InputPath": "$.DominantColors"
+                                                                                },
+                                                                                "DefaultOutputLabelInstanceDominantColors": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "DominantColors": null
+                                                                                    },
+                                                                                    "OutputPath": "$.DominantColors"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "ResultSelector": {
+                                                                        "BoundingBox.$": "$[0]",
+                                                                        "Confidence.$": "$[1]",
+                                                                        "DominantColors.$": "$[2]"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "End": true,
+                                                        "ItemsPath": "$.Instances"
+                                                    },
+                                                    "DefaultOutputLabelInstances": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Instances": null
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckOutputLabelName",
+                                                "States": {
+                                                    "CheckOutputLabelName": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Name",
+                                                                "IsPresent": true,
+                                                                "Next": "PassOutputLabelName"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputLabelName"
+                                                    },
+                                                    "PassOutputLabelName": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Name"
+                                                    },
+                                                    "DefaultOutputLabelName": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Name": null
+                                                        },
+                                                        "OutputPath": "$.Name"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckOutputLabelParents",
+                                                "States": {
+                                                    "CheckOutputLabelParents": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Parents",
+                                                                "IsPresent": true,
+                                                                "Next": "PassOutputLabelParents"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputLabelParents"
+                                                    },
+                                                    "PassOutputLabelParents": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Parents"
+                                                    },
+                                                    "DefaultOutputLabelParents": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Parents": null
+                                                        },
+                                                        "OutputPath": "$.Parents"
+                                                    }
+                                                }
                                             }
                                         ],
                                         "ResultSelector": {
-                                            "Aliases.$": "$[0]"
+                                            "Aliases.$": "$[0]",
+                                            "Categories.$": "$[1]",
+                                            "Confidence.$": "$[2]",
+                                            "Name.$": "$[3]",
+                                            "Parents.$": "$[4]"
                                         }
                                     }
                                 }
@@ -1049,10 +1545,31 @@
                 "ImageProperties.$": "$[0]",
                 "LabelModelVersion.$": "$[1]",
                 "Labels.$": "$[2]",
-                "OrientationCorrection.$": "$[1]"
+                "OrientationCorrection.$": "$[3]"
             },
             "ResultPath": "$.Output",
-            "End": true
+            "Next": "StateMachineOutput"
+        },
+        "StateMachineOutput": {
+            "Type": "Pass",
+            "End": true,
+            "Parameters": {
+                "DetectLabels": {
+                    "CreatedAt.$": "$$.Execution.StartTime",
+                    "Id.$": "$.S3.Object.ETag",
+                    "ImageProperties.$": "$.Output.ImageProperties",
+                    "LabelModelVersion.$": "$.Output.LabelModelVersion",
+                    "Labels.$": "$.Output.Labels",
+                    "OrientationCorrection.$": "$.Output.OrientationCorrection"
+                },
+                "Execution": {
+                    "Id.$": "$$.Execution.Id",
+                    "Name.$": "$$.Execution.Name",
+                    "StartTime.$": "$$.Execution.StartTime"
+                },
+                "S3.$": "$.S3",
+                "StateMachine.$": "$$.StateMachine"
+            }
         },
         "FailDetectLabels": {
             "Type": "Fail"
