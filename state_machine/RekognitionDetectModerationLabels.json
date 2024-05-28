@@ -1,1 +1,814 @@
-{}
+{
+    "StartAt": "ParallelCheckInput",
+    "States": {
+        "ParallelCheckInput": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "CheckInputRekognition",
+                    "States": {
+                        "CheckInputRekognition": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "And": [
+                                        {
+                                            "Variable": "$.Rekognition",
+                                            "IsPresent": true
+                                        },
+                                        {
+                                            "Not": {
+                                                "Variable": "$.Rekognition",
+                                                "IsNull": true
+                                            }
+                                        }
+                                    ],
+                                    "Next": "CheckInputDetectModerationLabels"
+                                }
+                            ],
+                            "Default": "DefaultInputRekognition"
+                        },
+                        "DefaultInputRekognition": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "Rekognition": {}
+                            },
+                            "Next": "CheckInputDetectModerationLabels"
+                        },
+                        "CheckInputDetectModerationLabels": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "And": [
+                                        {
+                                            "Variable": "$.DetectModerationLabels",
+                                            "IsPresent": true
+                                        },
+                                        {
+                                            "Not": {
+                                                "Variable": "$.DetectModerationLabels",
+                                                "IsNull": true
+                                            }
+                                        }
+                                    ],
+                                    "Next": "ParallelCheckInputDetectModerationLabels"
+                                }
+                            ],
+                            "InputPath": "$.Rekognition",
+                            "Default": "DefaultInputDetectModerationLabels"
+                        },
+                        "DefaultInputDetectModerationLabels": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "DetectModerationLabels": {}
+                            },
+                            "Next": "ParallelCheckInputDetectModerationLabels"
+                        },
+                        "ParallelCheckInputDetectModerationLabels": {
+                            "Type": "Parallel",
+                            "End": true,
+                            "Branches": [
+                                {
+                                    "StartAt": "CheckInputHumanLoopConfig",
+                                    "States": {
+                                        "CheckInputHumanLoopConfig": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.HumanLoopConfig",
+                                                    "IsPresent": true,
+                                                    "Next": "ParallelCheckHumanLoopConfig"
+                                                }
+                                            ],
+                                            "Default": "DefaultInputHumanLoopConfig"
+                                        },
+                                        "ParallelCheckHumanLoopConfig": {
+                                            "Type": "Parallel",
+                                            "End": true,
+                                            "Branches": [
+                                                {
+                                                    "StartAt": "CheckInputHumanLoopConfigDataAttributes",
+                                                    "States": {
+                                                        "CheckInputHumanLoopConfigDataAttributes": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "Variable": "$.DataAttributes",
+                                                                    "IsPresent": true,
+                                                                    "Next": "ParallelCheckInputHumanLoopConfigDataAttributes"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultInputHumanLoopConfigDataAttributes"
+                                                        },
+                                                        "ParallelCheckInputHumanLoopConfigDataAttributes": {
+                                                            "Type": "Parallel",
+                                                            "End": true,
+                                                            "Branches": [
+                                                                {
+                                                                    "StartAt": "CheckInputHumanLoopConfigDataAttributesContentClassifiers",
+                                                                    "States": {
+                                                                        "CheckInputHumanLoopConfigDataAttributesContentClassifiers": {
+                                                                            "Type": "Choice",
+                                                                            "Choices": [
+                                                                                {
+                                                                                    "Variable": "$.ContentClassifiers",
+                                                                                    "IsPresent": true,
+                                                                                    "Next": "MapInputHumanLoopConfigDataAttributesContentClassifiers"
+                                                                                }
+                                                                            ],
+                                                                            "Default": "DefaultInputHumanLoopConfigDataAttributesContentClassifiers"
+                                                                        },
+                                                                        "MapInputHumanLoopConfigDataAttributesContentClassifiers": {
+                                                                            "Type": "Map",
+                                                                            "ItemProcessor": {
+                                                                                "ProcessorConfig": {
+                                                                                    "Mode": "INLINE"
+                                                                                },
+                                                                                "StartAt": "CheckValueHumanLoopConfigDataAttributesContentClassifier",
+                                                                                "States": {
+                                                                                    "CheckValueHumanLoopConfigDataAttributesContentClassifier": {
+                                                                                        "Type": "Choice",
+                                                                                        "Choices": [
+                                                                                            {
+                                                                                                "Variable": "$",
+                                                                                                "IsString": true,
+                                                                                                "Next": "PassValueHumanLoopConfigDataAttributesContentClassifier"
+                                                                                            }
+                                                                                        ],
+                                                                                        "Default": "FailCheckValueHumanLoopConfigDataAttributesContentClassifier"
+                                                                                    },
+                                                                                    "PassValueHumanLoopConfigDataAttributesContentClassifier": {
+                                                                                        "Type": "Pass",
+                                                                                        "End": true
+                                                                                    },
+                                                                                    "FailCheckValueHumanLoopConfigDataAttributesContentClassifier": {
+                                                                                        "Type": "Fail"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "End": true,
+                                                                            "ItemsPath": "$.ContentClassifiers"
+                                                                        },
+                                                                        "DefaultInputHumanLoopConfigDataAttributesContentClassifiers": {
+                                                                            "Type": "Pass",
+                                                                            "Next": "MapInputHumanLoopConfigDataAttributesContentClassifiers",
+                                                                            "Parameters": {
+                                                                                "ContentClassifiers": []
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ],
+                                                            "ResultSelector": {
+                                                                "ContentClassifiers.$": "$[0]"
+                                                            }
+                                                        },
+                                                        "DefaultInputHumanLoopConfigDataAttributes": {
+                                                            "Type": "Pass",
+                                                            "Parameters": {
+                                                                "DataAttributes": {}
+                                                            },
+                                                            "Next": "ParallelCheckInputHumanLoopConfigDataAttributes"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "StartAt": "CheckInputHumanLoopConfigFlowDefinitionArn",
+                                                    "States": {
+                                                        "CheckInputHumanLoopConfigFlowDefinitionArn": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "And": [
+                                                                        {
+                                                                            "Variable": "$.FlowDefinitionArn",
+                                                                            "IsPresent": true
+                                                                        },
+                                                                        {
+                                                                            "Variable": "$.FlowDefinitionArn",
+                                                                            "IsString": true
+                                                                        }
+                                                                    ],
+                                                                    "Next": "PassInputHumanLoopConfigFlowDefinitionArn"
+                                                                }
+                                                            ],
+                                                            "Default": "FailCheckInputHumanLoopConfigFlowDefinitionArn"
+                                                        },
+                                                        "PassInputHumanLoopConfigFlowDefinitionArn": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "InputPath": "$.DefinitionArn"
+                                                        },
+                                                        "FailCheckInputHumanLoopConfigFlowDefinitionArn": {
+                                                            "Type": "Fail"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "StartAt": "CheckInputHumanLoopConfigHumanLoopName",
+                                                    "States": {
+                                                        "CheckInputHumanLoopConfigHumanLoopName": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "And": [
+                                                                        {
+                                                                            "Variable": "$.HumanLoopName",
+                                                                            "IsPresent": true
+                                                                        },
+                                                                        {
+                                                                            "Variable": "$.HumanLoopName",
+                                                                            "IsString": true
+                                                                        }
+                                                                    ],
+                                                                    "Next": "PassInputHumanLoopConfigHumanLoopName"
+                                                                }
+                                                            ],
+                                                            "Default": "FailCheckInputHumanLoopConfigHumanLoopName"
+                                                        },
+                                                        "PassInputHumanLoopConfigHumanLoopName": {
+                                                            "Type": "Pass",
+                                                            "End": true,
+                                                            "InputPath": "$.HumanLoopName"
+                                                        },
+                                                        "FailCheckInputHumanLoopConfigHumanLoopName": {
+                                                            "Type": "Fail"
+                                                        }
+                                                    }
+                                                }
+                                            ],
+                                            "InputPath": "$.HumanLoopConfig",
+                                            "ResultSelector": {
+                                                "DataAttributes.$": "$[0]",
+                                                "FlowDefinitionArn.$": "$[1]",
+                                                "HumanLoopName.$": "$[2]"
+                                            }
+                                        },
+                                        "DefaultInputHumanLoopConfig": {
+                                            "Type": "Pass",
+                                            "Parameters": {
+                                                "HumanLoopConfig": {}
+                                            },
+                                            "OutputPath": "$.HumanLoopConfig",
+                                            "Next": "ParallelCheckHumanLoopConfig"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckInputMinConfidence",
+                                    "States": {
+                                        "CheckInputMinConfidence": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.MinConfidence",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.MinConfidence",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "CheckValueMinConfidence"
+                                                }
+                                            ],
+                                            "Default": "DefaultInputMinConfidence"
+                                        },
+                                        "CheckValueMinConfidence": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$",
+                                                            "NumericGreaterThanEquals": 0
+                                                        },
+                                                        {
+                                                            "Variable": "$",
+                                                            "NumericLessThanEquals": 100
+                                                        }
+                                                    ],
+                                                    "Next": "PassValueMinConfidence"
+                                                }
+                                            ],
+                                            "Default": "FailCheckValueMinConfidence",
+                                            "InputPath": "$.MinConfidence"
+                                        },
+                                        "PassValueMinConfidence": {
+                                            "Type": "Pass",
+                                            "End": true
+                                        },
+                                        "FailCheckValueMinConfidence": {
+                                            "Type": "Fail"
+                                        },
+                                        "DefaultInputMinConfidence": {
+                                            "Type": "Pass",
+                                            "Parameters": {
+                                                "MinConfidence": 50
+                                            },
+                                            "Next": "CheckValueMinConfidence"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckInputProjectVersion",
+                                    "States": {
+                                        "CheckInputProjectVersion": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.ProjectVersion",
+                                                    "IsPresent": true,
+                                                    "Next": "PassInputProjectVersion"
+                                                }
+                                            ],
+                                            "Default": "DefaultInputProjectVersion"
+                                        },
+                                        "PassInputProjectVersion": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.ProjectVersion"
+                                        },
+                                        "DefaultInputProjectVersion": {
+                                            "Type": "Pass",
+                                            "Next": "PassInputProjectVersion",
+                                            "Parameters": {
+                                                "ProjectVersion": null
+                                            }
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultSelector": {
+                                "DetectModerationLabels": {
+                                    "HumanLoopConfig.$": "$[0]",
+                                    "MinConfidence.$": "$[1]",
+                                    "ProjectVersion.$": "$[2]"
+                                }
+                            },
+                            "InputPath": "$.DetectModerationLabels"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckInputS3",
+                    "States": {
+                        "CheckInputS3": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.S3",
+                                    "IsPresent": true,
+                                    "Next": "ParallelCheckInputS3"
+                                }
+                            ],
+                            "Default": "FailCheckS3Input"
+                        },
+                        "ParallelCheckInputS3": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "CheckInputBucket",
+                                    "States": {
+                                        "CheckInputBucket": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Bucket",
+                                                    "IsPresent": true,
+                                                    "Next": "CheckInputBucketName"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputBucket"
+                                        },
+                                        "CheckInputBucketName": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "HeadBucket"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputBucketName",
+                                            "InputPath": "$.Bucket"
+                                        },
+                                        "HeadBucket": {
+                                            "Type": "Task",
+                                            "Parameters": {
+                                                "Bucket.$": "$.Name"
+                                            },
+                                            "Resource": "arn:aws:states:::aws-sdk:s3:headBucket",
+                                            "Catch": [
+                                                {
+                                                    "ErrorEquals": [
+                                                        "States.TaskFailed"
+                                                    ],
+                                                    "Next": "FailHeadBucket"
+                                                }
+                                            ],
+                                            "ResultPath": "$.Output",
+                                            "Next": "PassHeadBucket"
+                                        },
+                                        "PassHeadBucket": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "AccessPointAlias.$": "$.Output.AccessPointAlias",
+                                                "Name.$": "$.Name",
+                                                "Region.$": "$.Output.BucketRegion"
+                                            }
+                                        },
+                                        "FailHeadBucket": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputBucketName": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputBucket": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckInputObject",
+                                    "States": {
+                                        "CheckInputObject": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Object",
+                                                    "IsPresent": true,
+                                                    "Next": "CheckInputKey"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputObject"
+                                        },
+                                        "CheckInputKey": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Key",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Key",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "PassInputKey"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputKey",
+                                            "InputPath": "$.Object"
+                                        },
+                                        "PassInputKey": {
+                                            "Type": "Pass",
+                                            "End": true
+                                        },
+                                        "FailCheckInputKey": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputObject": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                }
+                            ],
+                            "InputPath": "$.S3",
+                            "ResultSelector": {
+                                "Bucket.$": "$[0]",
+                                "Object.$": "$[1]"
+                            },
+                            "Next": "HeadObject"
+                        },
+                        "HeadObject": {
+                            "Type": "Task",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket.Name",
+                                "Key.$": "$.Object.Key"
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
+                            "ResultPath": "$.Output",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.TaskFailed"
+                                    ],
+                                    "Next": "FailHeadObject"
+                                }
+                            ],
+                            "Next": "PassHeadObject"
+                        },
+                        "PassHeadObject": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket",
+                                "Object.$": "States.JsonMerge($.Object, $.Output, false)"
+                            },
+                            "Next": "GetObjectAttributes"
+                        },
+                        "GetObjectAttributes": {
+                            "Type": "Task",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket.Name",
+                                "Key.$": "$.Object.Key",
+                                "ObjectAttributes": [
+                                    "Checksum",
+                                    "ETag",
+                                    "ObjectParts",
+                                    "ObjectSize",
+                                    "StorageClass"
+                                ]
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:s3:getObjectAttributes",
+                            "ResultPath": "$.Output",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.TaskFailed"
+                                    ],
+                                    "Next": "FailGetObjectAttributes"
+                                }
+                            ],
+                            "Next": "PassGetObjectAttributes"
+                        },
+                        "PassGetObjectAttributes": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket",
+                                "Object.$": "States.JsonMerge($.Object, $.Output, false)"
+                            }
+                        },
+                        "FailGetObjectAttributes": {
+                            "Type": "Fail"
+                        },
+                        "FailHeadObject": {
+                            "Type": "Fail"
+                        },
+                        "FailCheckS3Input": {
+                            "Type": "Fail"
+                        }
+                    }
+                }
+            ],
+            "Next": "DetectModerationLabels",
+            "ResultSelector": {
+                "Rekognition.$": "$[0]",
+                "S3.$": "$[1]"
+            }
+        },
+        "DetectModerationLabels": {
+            "Type": "Task",
+            "Parameters": {
+                "Image": {
+                    "S3Object": {
+                        "Bucket.$": "$.S3.Bucket.Name",
+                        "Name.$": "$.S3.Object.Key"
+                    }
+                }
+            },
+            "Resource": "arn:aws:states:::aws-sdk:rekognition:detectModerationLabels",
+            "Next": "ParallelCheckOutputDetectModerationLabels",
+            "ResultPath": "$.Output",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "Next": "FailDetectModerationLabels"
+                }
+            ]
+        },
+        "ParallelCheckOutputDetectModerationLabels": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "CheckOutputContentTypes",
+                    "States": {
+                        "CheckOutputContentTypes": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.ContentTypes",
+                                    "IsPresent": true,
+                                    "Next": "PassOutputContentTypes"
+                                }
+                            ],
+                            "Default": "DefaultOutputContentTypes",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOutputContentTypes": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "DefaultOutputContentTypes": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "ContentTypes": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputHumanLoopActivationOutput",
+                    "States": {
+                        "CheckOutputHumanLoopActivationOutput": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.HumanLoopActivationOutput",
+                                    "IsPresent": true,
+                                    "Next": "PassOutputHumanLoopActivationOutput"
+                                }
+                            ],
+                            "Default": "DefaultOutputHumanLoopActivationOutput",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOutputHumanLoopActivationOutput": {
+                            "Type": "Pass",
+                            "End": true
+                        },
+                        "DefaultOutputHumanLoopActivationOutput": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "HumanLoopActivationOutput": null
+                            },
+                            "OutputPath": "$.HumanLoopActivationOutput"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputModerationLabels",
+                    "States": {
+                        "CheckOutputModerationLabels": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.ModerationLabels",
+                                    "IsPresent": true,
+                                    "Next": "PassOutputModerationLabels"
+                                }
+                            ],
+                            "Default": "DefaultOutputModerationLabels",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOutputModerationLabels": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.ModerationLabels"
+                        },
+                        "DefaultOutputModerationLabels": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "ModerationLabels": null
+                            },
+                            "OutputPath": "$.ModerationLabels"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputModerationModelVersion",
+                    "States": {
+                        "CheckOutputModerationModelVersion": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.ModerationModelVersion",
+                                    "IsPresent": true,
+                                    "Next": "PassOutputModerationModelVersion"
+                                }
+                            ],
+                            "Default": "DefaultOutputModerationModelVersion",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOutputModerationModelVersion": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.ModerationModelVersion"
+                        },
+                        "DefaultOutputModerationModelVersion": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "ModerationModelVersion": null
+                            },
+                            "OutputPath": "$.ModerationModelVersion"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputOrientationCorrection",
+                    "States": {
+                        "CheckOutputOrientationCorrection": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.OrientationCorrection",
+                                    "IsPresent": true,
+                                    "Next": "PassOrientationCorrection"
+                                }
+                            ],
+                            "Default": "DefaultOutputOrientationCorrection",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOrientationCorrection": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.OrientationCorrection"
+                        },
+                        "DefaultOutputOrientationCorrection": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "OrientationCorrection": null
+                            },
+                            "Next": "PassOrientationCorrection"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputProjectVersion",
+                    "States": {
+                        "CheckOutputProjectVersion": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.ProjectVersion",
+                                    "IsPresent": true,
+                                    "Next": "PassOutputProjectVersion"
+                                }
+                            ],
+                            "Default": "DefaultOutputProjectVersion",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOutputProjectVersion": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.ProjectVersion"
+                        },
+                        "DefaultOutputProjectVersion": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "ProjectVersion": null
+                            },
+                            "OutputPath": "$.ProjectVersion"
+                        }
+                    }
+                }
+            ],
+            "ResultSelector": {
+                "ContentTypes.$": "$[0]",
+                "HumanLoopActivationOutput.$": "$[1]",
+                "ModerationLabels.$": "$[2]",
+                "ModerationModelVersion.$": "$[3]",
+                "OrientationCorrection.$": "$[4]",
+                "ProjectVersion.$": "$[5]"
+            },
+            "ResultPath": "$.Output",
+            "Next": "StateMachineOutput"
+        },
+        "StateMachineOutput": {
+            "Type": "Pass",
+            "End": true,
+            "Parameters": {
+                "DetectModerationLabels": {
+                    "ContentTypes.$": "$.Output.ContentTypes",
+                    "CreatedAt.$": "$$.Execution.StartTime",
+                    "HumanLoopActivationOutput.$": "$.Output.HumanLoopActivationOutput",
+                    "Id.$": "$.S3.Object.ETag",
+                    "ModerationLabels.$": "$.Output.ModerationLabels",
+                    "ModerationModelVersion.$": "$.Output.ModerationModelVersion",
+                    "OrientationCorrection.$": "$.Output.OrientationCorrection",
+                    "ProjectVersion.$": "$.Output.ProjectVersion"
+                },
+                "Execution": {
+                    "Id.$": "$$.Execution.Id",
+                    "Name.$": "$$.Execution.Name",
+                    "StartTime.$": "$$.Execution.StartTime"
+                },
+                "S3.$": "$.S3",
+                "StateMachine.$": "$$.StateMachine"
+            }
+        },
+        "FailDetectModerationLabels": {
+            "Type": "Fail"
+        }
+    }
+}

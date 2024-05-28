@@ -11,8 +11,18 @@
                             "Type": "Choice",
                             "Choices": [
                                 {
-                                    "Variable": "$.Rekognition",
-                                    "IsPresent": true,
+                                    "And": [
+                                        {
+                                            "Variable": "$.Rekognition",
+                                            "IsPresent": true
+                                        },
+                                        {
+                                            "Not": {
+                                                "Variable": "$.Rekognition",
+                                                "IsNull": true
+                                            }
+                                        }
+                                    ],
                                     "Next": "CheckInputDetectLabels"
                                 }
                             ],
@@ -29,8 +39,18 @@
                             "Type": "Choice",
                             "Choices": [
                                 {
-                                    "Variable": "$.DetectLabels",
-                                    "IsPresent": true,
+                                    "And": [
+                                        {
+                                            "Variable": "$.DetectLabels",
+                                            "IsPresent": true
+                                        },
+                                        {
+                                            "Not": {
+                                                "Variable": "$.DetectLabels",
+                                                "IsNull": true
+                                            }
+                                        }
+                                    ],
                                     "Next": "ParallelCheckInputDetectLabels"
                                 }
                             ],
@@ -55,8 +75,18 @@
                                             "Type": "Choice",
                                             "Choices": [
                                                 {
-                                                    "Variable": "$.Features",
-                                                    "IsPresent": true,
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Features",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Not": {
+                                                                "Variable": "$.Features",
+                                                                "IsNull": true
+                                                            }
+                                                        }
+                                                    ],
                                                     "Next": "MapInputFeatures"
                                                 }
                                             ],
@@ -236,8 +266,18 @@
                                             "Type": "Choice",
                                             "Choices": [
                                                 {
-                                                    "Variable": "$.Settings",
-                                                    "IsPresent": true,
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Settings",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Not": {
+                                                                "Variable": "$.Settings",
+                                                                "IsNull": true
+                                                            }
+                                                        }
+                                                    ],
                                                     "Next": "ParallelCheckInputSettings"
                                                 }
                                             ],
@@ -248,46 +288,66 @@
                                             "End": true,
                                             "Branches": [
                                                 {
-                                                    "StartAt": "CheckInputGeneralLabels",
+                                                    "StartAt": "CheckInputSettingsGeneralLabels",
                                                     "States": {
-                                                        "CheckInputGeneralLabels": {
+                                                        "CheckInputSettingsGeneralLabels": {
                                                             "Type": "Choice",
                                                             "Choices": [
                                                                 {
-                                                                    "Variable": "$.GeneralLabels",
-                                                                    "IsPresent": true,
-                                                                    "Next": "ParallelCheckInputGeneralLabels"
+                                                                    "And": [
+                                                                        {
+                                                                            "Variable": "$.GeneralLabels",
+                                                                            "IsPresent": true
+                                                                        },
+                                                                        {
+                                                                            "Not": {
+                                                                                "Variable": "$.GeneralLabels",
+                                                                                "IsNull": true
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "Next": "ParallelCheckInputSettingsGeneralLabels"
                                                                 }
                                                             ],
-                                                            "Default": "DefaultInputGeneralLabels"
+                                                            "Default": "DefaultInputSettingsGeneralLabels"
                                                         },
-                                                        "ParallelCheckInputGeneralLabels": {
+                                                        "ParallelCheckInputSettingsGeneralLabels": {
                                                             "Type": "Parallel",
                                                             "End": true,
                                                             "Branches": [
                                                                 {
-                                                                    "StartAt": "CheckInputLabelCategoryExclusionFilters",
+                                                                    "StartAt": "CheckInputSettingsGeneralLabelsLabelCategoryExclusionFilters",
                                                                     "States": {
-                                                                        "CheckInputLabelCategoryExclusionFilters": {
+                                                                        "CheckInputSettingsGeneralLabelsLabelCategoryExclusionFilters": {
                                                                             "Type": "Choice",
                                                                             "Choices": [
                                                                                 {
-                                                                                    "Variable": "$.LabelCategoryExclusionFilters",
-                                                                                    "IsPresent": true,
-                                                                                    "Next": "MapInputLabelCategoryExclusionFilters"
+                                                                                    "And": [
+                                                                                        {
+                                                                                            "Variable": "$.LabelCategoryExclusionFilters",
+                                                                                            "IsPresent": true
+                                                                                        },
+                                                                                        {
+                                                                                            "Not": {
+                                                                                                "Variable": "$.LabelCategoryExclusionFilters",
+                                                                                                "IsNull": true
+                                                                                            }
+                                                                                        }
+                                                                                    ],
+                                                                                    "Next": "MapInputSettingsGeneralLabelsLabelCategoryExclusionFilters"
                                                                                 }
                                                                             ],
-                                                                            "Default": "DefaultInputLabelCategoryExclusionFilters"
+                                                                            "Default": "DefaultInputSettingsGeneralLabelsLabelCategoryExclusionFilters"
                                                                         },
-                                                                        "MapInputLabelCategoryExclusionFilters": {
+                                                                        "MapInputSettingsGeneralLabelsLabelCategoryExclusionFilters": {
                                                                             "Type": "Map",
                                                                             "ItemProcessor": {
                                                                                 "ProcessorConfig": {
                                                                                     "Mode": "INLINE"
                                                                                 },
-                                                                                "StartAt": "CheckValueLabelCategoryExclusionFilter",
+                                                                                "StartAt": "CheckValueSettingsGeneralLabelsLabelCategoryExclusionFilter",
                                                                                 "States": {
-                                                                                    "CheckValueLabelCategoryExclusionFilter": {
+                                                                                    "CheckValueSettingsGeneralLabelsLabelCategoryExclusionFilter": {
                                                                                         "Type": "Choice",
                                                                                         "Choices": [
                                                                                             {
@@ -297,16 +357,16 @@
                                                                                                         "IsString": true
                                                                                                     }
                                                                                                 ],
-                                                                                                "Next": "PassValueLabelCategoryExclusionFilter"
+                                                                                                "Next": "PassValueSettingsGeneralLabelsLabelCategoryExclusionFilter"
                                                                                             }
                                                                                         ],
-                                                                                        "Default": "FailCheckValueLabelCategoryExclusionFilter"
+                                                                                        "Default": "FailCheckValueSettingsGeneralLabelsLabelCategoryExclusionFilters"
                                                                                     },
-                                                                                    "PassValueLabelCategoryExclusionFilter": {
+                                                                                    "PassValueSettingsGeneralLabelsLabelCategoryExclusionFilter": {
                                                                                         "Type": "Pass",
                                                                                         "End": true
                                                                                     },
-                                                                                    "FailCheckValueLabelCategoryExclusionFilter": {
+                                                                                    "FailCheckValueSettingsGeneralLabelsLabelCategoryExclusionFilters": {
                                                                                         "Type": "Fail"
                                                                                     }
                                                                                 }
@@ -314,53 +374,63 @@
                                                                             "End": true,
                                                                             "ItemsPath": "$.LabelCategoryExclusionFilters"
                                                                         },
-                                                                        "DefaultInputLabelCategoryExclusionFilters": {
+                                                                        "DefaultInputSettingsGeneralLabelsLabelCategoryExclusionFilters": {
                                                                             "Type": "Pass",
                                                                             "Parameters": {
                                                                                 "LabelCategoryExclusionFilters": []
                                                                             },
-                                                                            "Next": "MapInputLabelCategoryExclusionFilters"
+                                                                            "Next": "MapInputSettingsGeneralLabelsLabelCategoryExclusionFilters"
                                                                         }
                                                                     }
                                                                 },
                                                                 {
-                                                                    "StartAt": "CheckInputLabelCategoryInclusionFilters",
+                                                                    "StartAt": "CheckInputSettingsGeneralLabelsLabelCategoryInclusionFilters",
                                                                     "States": {
-                                                                        "CheckInputLabelCategoryInclusionFilters": {
+                                                                        "CheckInputSettingsGeneralLabelsLabelCategoryInclusionFilters": {
                                                                             "Type": "Choice",
                                                                             "Choices": [
                                                                                 {
-                                                                                    "Variable": "$.LabelCategoryInclusionFilters",
-                                                                                    "IsPresent": true,
-                                                                                    "Next": "MapInputLabelCategoryInclusionFilters"
+                                                                                    "And": [
+                                                                                        {
+                                                                                            "Variable": "$.LabelCategoryInclusionFilters",
+                                                                                            "IsPresent": true
+                                                                                        },
+                                                                                        {
+                                                                                            "Not": {
+                                                                                                "Variable": "$.LabelCategoryInclusionFilters",
+                                                                                                "IsNull": true
+                                                                                            }
+                                                                                        }
+                                                                                    ],
+                                                                                    "Next": "MapInputSettingsGeneralLabelsLabelCategoryInclusionFilters"
                                                                                 }
                                                                             ],
-                                                                            "Default": "DefaultLabelCategoryInclusionFilters"
+                                                                            "Default": "DefaultSettingsGeneralLabelsLabelCategoryInclusionFilters"
                                                                         },
-                                                                        "MapInputLabelCategoryInclusionFilters": {
+                                                                        "MapInputSettingsGeneralLabelsLabelCategoryInclusionFilters": {
                                                                             "Type": "Map",
                                                                             "ItemProcessor": {
                                                                                 "ProcessorConfig": {
                                                                                     "Mode": "INLINE"
                                                                                 },
-                                                                                "StartAt": "CheckValueLabelCategoryInclusionFilter",
+                                                                                "StartAt": "CheckValueSettingsGeneralLabelsLabelCategoryInclusionFilter",
                                                                                 "States": {
-                                                                                    "CheckValueLabelCategoryInclusionFilter": {
+                                                                                    "CheckValueSettingsGeneralLabelsLabelCategoryInclusionFilter": {
                                                                                         "Type": "Choice",
                                                                                         "Choices": [
                                                                                             {
                                                                                                 "Variable": "$",
                                                                                                 "IsString": true,
-                                                                                                "Next": "PassValueLabelCategoryInclusionFilter"
+                                                                                                "Next": "PassValueSettingsGeneralLabelsLabelCategoryInclusionFilter"
                                                                                             }
                                                                                         ],
-                                                                                        "Default": "FailCheckValueLabelCategoryInclusionFilter"
+                                                                                        "Default": "FailCheckValueSettingsGeneralLabelsLabelCategoryInclusionFilter"
                                                                                     },
-                                                                                    "PassValueLabelCategoryInclusionFilter": {
+                                                                                    "PassValueSettingsGeneralLabelsLabelCategoryInclusionFilter": {
                                                                                         "Type": "Pass",
                                                                                         "End": true
                                                                                     },
-                                                                                    "FailCheckValueLabelCategoryInclusionFilter": {
+                                                                                    "FailCheckValueSettingsGeneralLabelsLabelCategoryInclusionFilter": {
                                                                                         "Type": "Fail"
                                                                                     }
                                                                                 }
@@ -368,53 +438,63 @@
                                                                             "End": true,
                                                                             "ItemsPath": "$.LabelCategoryInclusionFilters"
                                                                         },
-                                                                        "DefaultLabelCategoryInclusionFilters": {
+                                                                        "DefaultSettingsGeneralLabelsLabelCategoryInclusionFilters": {
                                                                             "Type": "Pass",
                                                                             "Parameters": {
                                                                                 "LabelCategoryInclusionFilters": []
                                                                             },
-                                                                            "Next": "MapInputLabelCategoryInclusionFilters"
+                                                                            "Next": "MapInputSettingsGeneralLabelsLabelCategoryInclusionFilters"
                                                                         }
                                                                     }
                                                                 },
                                                                 {
-                                                                    "StartAt": "CheckInputLabelExclusionFilters",
+                                                                    "StartAt": "CheckInputSettingsGeneralLabelsLabelExclusionFilters",
                                                                     "States": {
-                                                                        "CheckInputLabelExclusionFilters": {
+                                                                        "CheckInputSettingsGeneralLabelsLabelExclusionFilters": {
                                                                             "Type": "Choice",
                                                                             "Choices": [
                                                                                 {
-                                                                                    "Variable": "$.LabelExclusionFilters",
-                                                                                    "IsPresent": true,
-                                                                                    "Next": "MapInputLabelExclusionFilters"
+                                                                                    "And": [
+                                                                                        {
+                                                                                            "Variable": "$.LabelExclusionFilters",
+                                                                                            "IsPresent": true
+                                                                                        },
+                                                                                        {
+                                                                                            "Not": {
+                                                                                                "Variable": "$.LabelExclusionFilters",
+                                                                                                "IsNull": true
+                                                                                            }
+                                                                                        }
+                                                                                    ],
+                                                                                    "Next": "MapInputSettingsGeneralLabelsLabelExclusionFilters"
                                                                                 }
                                                                             ],
-                                                                            "Default": "DefaultInputLabelExclusionFilters"
+                                                                            "Default": "DefaultInputSettingsGeneralLabelsLabelExclusionFilters"
                                                                         },
-                                                                        "MapInputLabelExclusionFilters": {
+                                                                        "MapInputSettingsGeneralLabelsLabelExclusionFilters": {
                                                                             "Type": "Map",
                                                                             "ItemProcessor": {
                                                                                 "ProcessorConfig": {
                                                                                     "Mode": "INLINE"
                                                                                 },
-                                                                                "StartAt": "CheckValueLabelExclusionFilter",
+                                                                                "StartAt": "CheckValueSettingsGeneralLabelsLabelExclusionFilter",
                                                                                 "States": {
-                                                                                    "CheckValueLabelExclusionFilter": {
+                                                                                    "CheckValueSettingsGeneralLabelsLabelExclusionFilter": {
                                                                                         "Type": "Choice",
                                                                                         "Choices": [
                                                                                             {
                                                                                                 "Variable": "$",
                                                                                                 "IsString": true,
-                                                                                                "Next": "PassValueLabelExclusionFilter"
+                                                                                                "Next": "PassValueSettingsGeneralLabelsLabelExclusionFilter"
                                                                                             }
                                                                                         ],
-                                                                                        "Default": "FailCheckValueLabelExclusionFilter"
+                                                                                        "Default": "FailCheckValueSettingsGeneralLabelsLabelExclusionFilter"
                                                                                     },
-                                                                                    "PassValueLabelExclusionFilter": {
+                                                                                    "PassValueSettingsGeneralLabelsLabelExclusionFilter": {
                                                                                         "Type": "Pass",
                                                                                         "End": true
                                                                                     },
-                                                                                    "FailCheckValueLabelExclusionFilter": {
+                                                                                    "FailCheckValueSettingsGeneralLabelsLabelExclusionFilter": {
                                                                                         "Type": "Fail"
                                                                                     }
                                                                                 }
@@ -422,53 +502,63 @@
                                                                             "End": true,
                                                                             "ItemsPath": "$.LabelExclusionFilters"
                                                                         },
-                                                                        "DefaultInputLabelExclusionFilters": {
+                                                                        "DefaultInputSettingsGeneralLabelsLabelExclusionFilters": {
                                                                             "Type": "Pass",
                                                                             "Parameters": {
                                                                                 "LabelExclusionFilters": []
                                                                             },
-                                                                            "Next": "MapInputLabelExclusionFilters"
+                                                                            "Next": "MapInputSettingsGeneralLabelsLabelExclusionFilters"
                                                                         }
                                                                     }
                                                                 },
                                                                 {
-                                                                    "StartAt": "CheckInputLabelInclusionFilters",
+                                                                    "StartAt": "CheckInputSettingsGeneralLabelsLabelInclusionFilters",
                                                                     "States": {
-                                                                        "CheckInputLabelInclusionFilters": {
+                                                                        "CheckInputSettingsGeneralLabelsLabelInclusionFilters": {
                                                                             "Type": "Choice",
                                                                             "Choices": [
                                                                                 {
-                                                                                    "Variable": "$.LabelInclusionFilters",
-                                                                                    "IsPresent": true,
-                                                                                    "Next": "MapInputLabelInclusionFilters"
+                                                                                    "And": [
+                                                                                        {
+                                                                                            "Variable": "$.LabelInclusionFilters",
+                                                                                            "IsPresent": true
+                                                                                        },
+                                                                                        {
+                                                                                            "Not": {
+                                                                                                "Variable": "$.LabelInclusionFilters",
+                                                                                                "IsNull": true
+                                                                                            }
+                                                                                        }
+                                                                                    ],
+                                                                                    "Next": "MapInputSettingsGeneralLabelsLabelInclusionFilters"
                                                                                 }
                                                                             ],
-                                                                            "Default": "DefaultInputLabelInclusionFilters"
+                                                                            "Default": "DefaultInputSettingsGeneralLabelsLabelInclusionFilters"
                                                                         },
-                                                                        "MapInputLabelInclusionFilters": {
+                                                                        "MapInputSettingsGeneralLabelsLabelInclusionFilters": {
                                                                             "Type": "Map",
                                                                             "ItemProcessor": {
                                                                                 "ProcessorConfig": {
                                                                                     "Mode": "INLINE"
                                                                                 },
-                                                                                "StartAt": "CheckValueLabelInclusionFilter",
+                                                                                "StartAt": "CheckValueSettingsGeneralLabelsLabelInclusionFilter",
                                                                                 "States": {
-                                                                                    "CheckValueLabelInclusionFilter": {
+                                                                                    "CheckValueSettingsGeneralLabelsLabelInclusionFilter": {
                                                                                         "Type": "Choice",
                                                                                         "Choices": [
                                                                                             {
                                                                                                 "Variable": "$",
                                                                                                 "IsString": true,
-                                                                                                "Next": "PassValueLabelInclusionFilter"
+                                                                                                "Next": "PassValueSettingsGeneralLabelsLabelInclusionFilter"
                                                                                             }
                                                                                         ],
-                                                                                        "Default": "FailCheckValueLabelInclusionFilter"
+                                                                                        "Default": "FailCheckValueSettingsGeneralLabelsLabelInclusionFilter"
                                                                                     },
-                                                                                    "PassValueLabelInclusionFilter": {
+                                                                                    "PassValueSettingsGeneralLabelsLabelInclusionFilter": {
                                                                                         "Type": "Pass",
                                                                                         "End": true
                                                                                     },
-                                                                                    "FailCheckValueLabelInclusionFilter": {
+                                                                                    "FailCheckValueSettingsGeneralLabelsLabelInclusionFilter": {
                                                                                         "Type": "Fail"
                                                                                     }
                                                                                 }
@@ -476,12 +566,12 @@
                                                                             "End": true,
                                                                             "ItemsPath": "$.LabelInclusionFilters"
                                                                         },
-                                                                        "DefaultInputLabelInclusionFilters": {
+                                                                        "DefaultInputSettingsGeneralLabelsLabelInclusionFilters": {
                                                                             "Type": "Pass",
                                                                             "Parameters": {
                                                                                 "LabelInclusionFilters": []
                                                                             },
-                                                                            "Next": "MapInputLabelInclusionFilters"
+                                                                            "Next": "MapInputSettingsGeneralLabelsLabelInclusionFilters"
                                                                         }
                                                                     }
                                                                 }
@@ -494,9 +584,9 @@
                                                                 "LabelInclusionFilters.$": "$[3]"
                                                             }
                                                         },
-                                                        "DefaultInputGeneralLabels": {
+                                                        "DefaultInputSettingsGeneralLabels": {
                                                             "Type": "Pass",
-                                                            "Next": "ParallelCheckInputGeneralLabels",
+                                                            "Next": "ParallelCheckInputSettingsGeneralLabels",
                                                             "Parameters": {
                                                                 "GeneralLabels": {}
                                                             }
@@ -504,27 +594,37 @@
                                                     }
                                                 },
                                                 {
-                                                    "StartAt": "CheckInputImageProperties",
+                                                    "StartAt": "CheckInputSettingsImageProperties",
                                                     "States": {
-                                                        "CheckInputImageProperties": {
+                                                        "CheckInputSettingsImageProperties": {
                                                             "Type": "Choice",
                                                             "Choices": [
                                                                 {
-                                                                    "Variable": "$.ImageProperties",
-                                                                    "IsPresent": true,
-                                                                    "Next": "ParallelCheckInputImageProperties"
+                                                                    "And": [
+                                                                        {
+                                                                            "Variable": "$.ImageProperties",
+                                                                            "IsPresent": true
+                                                                        },
+                                                                        {
+                                                                            "Not": {
+                                                                                "Variable": "$.ImageProperties",
+                                                                                "IsNull": true
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "Next": "ParallelCheckInputSettingsImageProperties"
                                                                 }
                                                             ],
-                                                            "Default": "DefaultInputImageProperties"
+                                                            "Default": "DefaultInputSettingsImageProperties"
                                                         },
-                                                        "ParallelCheckInputImageProperties": {
+                                                        "ParallelCheckInputSettingsImageProperties": {
                                                             "Type": "Parallel",
                                                             "End": true,
                                                             "Branches": [
                                                                 {
-                                                                    "StartAt": "CheckInputMaxDominantColors",
+                                                                    "StartAt": "CheckInputSettingsImagePropertiesMaxDominantColors",
                                                                     "States": {
-                                                                        "CheckInputMaxDominantColors": {
+                                                                        "CheckInputSettingsImagePropertiesMaxDominantColors": {
                                                                             "Type": "Choice",
                                                                             "Choices": [
                                                                                 {
@@ -538,12 +638,12 @@
                                                                                             "IsNumeric": true
                                                                                         }
                                                                                     ],
-                                                                                    "Next": "CheckValueMaxDominantColor"
+                                                                                    "Next": "CheckValueSettingsImagePropertiesMaxDominantColor"
                                                                                 }
                                                                             ],
-                                                                            "Default": "DefaultInputMaxDominantColors"
+                                                                            "Default": "DefaultInputSettingsImagePropertiesMaxDominantColors"
                                                                         },
-                                                                        "CheckValueMaxDominantColor": {
+                                                                        "CheckValueSettingsImagePropertiesMaxDominantColor": {
                                                                             "Type": "Choice",
                                                                             "Choices": [
                                                                                 {
@@ -557,25 +657,25 @@
                                                                                             "NumericLessThanEquals": 100
                                                                                         }
                                                                                     ],
-                                                                                    "Next": "PassValueMaxDominantColor"
+                                                                                    "Next": "PassValueSettingsImagePropertiesMaxDominantColor"
                                                                                 }
                                                                             ],
-                                                                            "Default": "FailCheckValueMaxDominantColor",
+                                                                            "Default": "FailCheckValueSettingsImagePropertiesMaxDominantColor",
                                                                             "InputPath": "$.MaxDominantColors"
                                                                         },
-                                                                        "PassValueMaxDominantColor": {
+                                                                        "PassValueSettingsImagePropertiesMaxDominantColor": {
                                                                             "Type": "Pass",
                                                                             "End": true
                                                                         },
-                                                                        "FailCheckValueMaxDominantColor": {
+                                                                        "FailCheckValueSettingsImagePropertiesMaxDominantColor": {
                                                                             "Type": "Fail"
                                                                         },
-                                                                        "DefaultInputMaxDominantColors": {
+                                                                        "DefaultInputSettingsImagePropertiesMaxDominantColors": {
                                                                             "Type": "Pass",
                                                                             "Parameters": {
                                                                                 "MaxDominantColors": 20
                                                                             },
-                                                                            "Next": "CheckValueMaxDominantColor"
+                                                                            "Next": "CheckValueSettingsImagePropertiesMaxDominantColor"
                                                                         }
                                                                     }
                                                                 }
@@ -585,12 +685,12 @@
                                                                 "MaxDominantColors.$": "$[0]"
                                                             }
                                                         },
-                                                        "DefaultInputImageProperties": {
+                                                        "DefaultInputSettingsImageProperties": {
                                                             "Type": "Pass",
                                                             "Parameters": {
                                                                 "ImageProperties": {}
                                                             },
-                                                            "Next": "ParallelCheckInputImageProperties"
+                                                            "Next": "ParallelCheckInputSettingsImageProperties"
                                                         }
                                                     }
                                                 }

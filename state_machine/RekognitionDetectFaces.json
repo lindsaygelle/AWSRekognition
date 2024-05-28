@@ -11,8 +11,18 @@
                             "Type": "Choice",
                             "Choices": [
                                 {
-                                    "Variable": "$.Rekognition",
-                                    "IsPresent": true,
+                                    "And": [
+                                        {
+                                            "Variable": "$.Rekognition",
+                                            "IsPresent": true
+                                        },
+                                        {
+                                            "Not": {
+                                                "Variable": "$.Rekognition",
+                                                "IsNull": true
+                                            }
+                                        }
+                                    ],
                                     "Next": "CheckInputDetectFaces"
                                 }
                             ],
@@ -29,8 +39,18 @@
                             "Type": "Choice",
                             "Choices": [
                                 {
-                                    "Variable": "$.DetectFaces",
-                                    "IsPresent": true,
+                                    "And": [
+                                        {
+                                            "Variable": "$.DetectFaces",
+                                            "IsPresent": true
+                                        },
+                                        {
+                                            "Not": {
+                                                "Variable": "$.DetectFaces",
+                                                "IsNull": true
+                                            }
+                                        }
+                                    ],
                                     "Next": "ParallelCheckInputDetectFaces"
                                 }
                             ],
@@ -55,8 +75,18 @@
                                             "Type": "Choice",
                                             "Choices": [
                                                 {
-                                                    "Variable": "$.Attributes",
-                                                    "IsPresent": true,
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Attributes",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Not": {
+                                                                "Variable": "$.Attributes",
+                                                                "IsNull": true
+                                                            }
+                                                        }
+                                                    ],
                                                     "Next": "MapInputAttributes"
                                                 }
                                             ],
