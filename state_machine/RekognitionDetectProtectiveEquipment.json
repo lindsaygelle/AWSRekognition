@@ -1,0 +1,1116 @@
+{
+    "StartAt": "ParallelCheckInput",
+    "States": {
+        "ParallelCheckInput": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "CheckInputRekognition",
+                    "States": {
+                        "CheckInputRekognition": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "And": [
+                                        {
+                                            "Variable": "$.Rekognition",
+                                            "IsPresent": true
+                                        },
+                                        {
+                                            "Not": {
+                                                "Variable": "$.Rekognition",
+                                                "IsNull": true
+                                            }
+                                        }
+                                    ],
+                                    "Next": "CheckInputDetectProtectiveEquipment"
+                                }
+                            ],
+                            "Default": "DefaultInputRekognition"
+                        },
+                        "DefaultInputRekognition": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "Rekognition": {}
+                            },
+                            "Next": "CheckInputDetectProtectiveEquipment"
+                        },
+                        "CheckInputDetectProtectiveEquipment": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "And": [
+                                        {
+                                            "Variable": "$.DetectProtectiveEquipment",
+                                            "IsPresent": true
+                                        },
+                                        {
+                                            "Not": {
+                                                "Variable": "$.DetectProtectiveEquipment",
+                                                "IsNull": true
+                                            }
+                                        }
+                                    ],
+                                    "Next": "ParallelCheckInputDetectProtectiveEquipment"
+                                }
+                            ],
+                            "InputPath": "$.Rekognition",
+                            "Default": "DefaultInputDetectProtectiveEquipment"
+                        },
+                        "DefaultInputDetectProtectiveEquipment": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "DetectProtectiveEquipment": {}
+                            },
+                            "Next": "ParallelCheckInputDetectProtectiveEquipment"
+                        },
+                        "ParallelCheckInputDetectProtectiveEquipment": {
+                            "Type": "Parallel",
+                            "End": true,
+                            "Branches": [
+                                {
+                                    "StartAt": "CheckInputSummarizationAttributes",
+                                    "States": {
+                                        "CheckInputSummarizationAttributes": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.SummarizationAttributes",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Not": {
+                                                                "Variable": "$.SummarizationAttributes",
+                                                                "IsNull": true
+                                                            }
+                                                        }
+                                                    ],
+                                                    "Next": "ParallelCheckInputSummarizationAttributes"
+                                                }
+                                            ],
+                                            "Default": "DefaultInputSummarizationAttributes"
+                                        },
+                                        "ParallelCheckInputSummarizationAttributes": {
+                                            "Type": "Parallel",
+                                            "End": true,
+                                            "Branches": [
+                                                {
+                                                    "StartAt": "CheckInputSummarizationAttributesMinConfidence",
+                                                    "States": {
+                                                        "CheckInputSummarizationAttributesMinConfidence": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "And": [
+                                                                        {
+                                                                            "Variable": "$.MinConfidence",
+                                                                            "IsPresent": true
+                                                                        },
+                                                                        {
+                                                                            "Variable": "$.MinConfidence",
+                                                                            "IsNumeric": true
+                                                                        }
+                                                                    ],
+                                                                    "Next": "CheckValueSummarizationAttributesMinConfidence"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultInputSummarizationAttributesMinConfidence"
+                                                        },
+                                                        "CheckValueSummarizationAttributesMinConfidence": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "And": [
+                                                                        {
+                                                                            "Variable": "$",
+                                                                            "NumericGreaterThanEquals": 0
+                                                                        },
+                                                                        {
+                                                                            "Variable": "$",
+                                                                            "NumericLessThanEquals": 100
+                                                                        }
+                                                                    ],
+                                                                    "Next": "PassValueSummarizationAttributesMinConfidence"
+                                                                }
+                                                            ],
+                                                            "Default": "FailCheckValueSummarizationAttributesMinConfidence",
+                                                            "InputPath": "$.MinConfidence"
+                                                        },
+                                                        "PassValueSummarizationAttributesMinConfidence": {
+                                                            "Type": "Pass",
+                                                            "End": true
+                                                        },
+                                                        "FailCheckValueSummarizationAttributesMinConfidence": {
+                                                            "Type": "Fail"
+                                                        },
+                                                        "DefaultInputSummarizationAttributesMinConfidence": {
+                                                            "Type": "Pass",
+                                                            "Parameters": {
+                                                                "MinConfidence": 50
+                                                            },
+                                                            "Next": "CheckValueSummarizationAttributesMinConfidence"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "StartAt": "CheckInputSummarizationAttributesRequiredEquipmentTypes",
+                                                    "States": {
+                                                        "CheckInputSummarizationAttributesRequiredEquipmentTypes": {
+                                                            "Type": "Choice",
+                                                            "Choices": [
+                                                                {
+                                                                    "And": [
+                                                                        {
+                                                                            "Variable": "$.RequiredEquipmentTypes",
+                                                                            "IsPresent": true
+                                                                        },
+                                                                        {
+                                                                            "Not": {
+                                                                                "Variable": "$.RequiredEquipmentTypes",
+                                                                                "IsString": true
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "Next": "MapInputSummarizationAttributesRequiredEquipmentTypes"
+                                                                }
+                                                            ],
+                                                            "Default": "DefaultInputSummarizationAttributesRequiredEquipmentTypes"
+                                                        },
+                                                        "MapInputSummarizationAttributesRequiredEquipmentTypes": {
+                                                            "Type": "Map",
+                                                            "ItemProcessor": {
+                                                                "ProcessorConfig": {
+                                                                    "Mode": "INLINE"
+                                                                },
+                                                                "StartAt": "CheckInputSummarizationAttributesRequiredEquipmentType",
+                                                                "States": {
+                                                                    "CheckInputSummarizationAttributesRequiredEquipmentType": {
+                                                                        "Type": "Choice",
+                                                                        "Choices": [
+                                                                            {
+                                                                                "Variable": "$",
+                                                                                "IsString": true,
+                                                                                "Next": "PassInputSummarizationAttributesRequiredEquipmentType"
+                                                                            }
+                                                                        ],
+                                                                        "Default": "FailCheckInputSummarizationAttributesRequiredEquipmentType"
+                                                                    },
+                                                                    "PassInputSummarizationAttributesRequiredEquipmentType": {
+                                                                        "Type": "Pass",
+                                                                        "End": true
+                                                                    },
+                                                                    "FailCheckInputSummarizationAttributesRequiredEquipmentType": {
+                                                                        "Type": "Fail"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "End": true,
+                                                            "ItemsPath": "$.RequiredEquipmentTypes"
+                                                        },
+                                                        "DefaultInputSummarizationAttributesRequiredEquipmentTypes": {
+                                                            "Type": "Pass",
+                                                            "Next": "MapInputSummarizationAttributesRequiredEquipmentTypes",
+                                                            "Parameters": {
+                                                                "RequiredEquipmentTypes": []
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ],
+                                            "InputPath": "$.SummarizationAttributes",
+                                            "ResultSelector": {
+                                                "MinConfidence.$": "$[0]",
+                                                "RequiredEquipmentTypes.$": "$[1]"
+                                            }
+                                        },
+                                        "DefaultInputSummarizationAttributes": {
+                                            "Type": "Pass",
+                                            "Parameters": {
+                                                "SummarizationAttributes": {}
+                                            },
+                                            "Next": "ParallelCheckInputSummarizationAttributes"
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultSelector": {
+                                "DetectProtectiveEquipment": {
+                                    "SummarizationAttributes.$": "$[0]"
+                                }
+                            },
+                            "InputPath": "$.DetectProtectiveEquipment"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckInputS3",
+                    "States": {
+                        "CheckInputS3": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.S3",
+                                    "IsPresent": true,
+                                    "Next": "ParallelCheckInputS3"
+                                }
+                            ],
+                            "Default": "FailCheckS3Input"
+                        },
+                        "ParallelCheckInputS3": {
+                            "Type": "Parallel",
+                            "Branches": [
+                                {
+                                    "StartAt": "CheckInputBucket",
+                                    "States": {
+                                        "CheckInputBucket": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Bucket",
+                                                    "IsPresent": true,
+                                                    "Next": "CheckInputBucketName"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputBucket"
+                                        },
+                                        "CheckInputBucketName": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Name",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "HeadBucket"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputBucketName",
+                                            "InputPath": "$.Bucket"
+                                        },
+                                        "HeadBucket": {
+                                            "Type": "Task",
+                                            "Parameters": {
+                                                "Bucket.$": "$.Name"
+                                            },
+                                            "Resource": "arn:aws:states:::aws-sdk:s3:headBucket",
+                                            "Catch": [
+                                                {
+                                                    "ErrorEquals": [
+                                                        "States.TaskFailed"
+                                                    ],
+                                                    "Next": "FailHeadBucket"
+                                                }
+                                            ],
+                                            "ResultPath": "$.Output",
+                                            "Next": "PassHeadBucket"
+                                        },
+                                        "PassHeadBucket": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "AccessPointAlias.$": "$.Output.AccessPointAlias",
+                                                "Name.$": "$.Name",
+                                                "Region.$": "$.Output.BucketRegion"
+                                            }
+                                        },
+                                        "FailHeadBucket": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputBucketName": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputBucket": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckInputObject",
+                                    "States": {
+                                        "CheckInputObject": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.Object",
+                                                    "IsPresent": true,
+                                                    "Next": "CheckInputKey"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputObject"
+                                        },
+                                        "CheckInputKey": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.Key",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Variable": "$.Key",
+                                                            "IsString": true
+                                                        }
+                                                    ],
+                                                    "Next": "PassInputKey"
+                                                }
+                                            ],
+                                            "Default": "FailCheckInputKey",
+                                            "InputPath": "$.Object"
+                                        },
+                                        "PassInputKey": {
+                                            "Type": "Pass",
+                                            "End": true
+                                        },
+                                        "FailCheckInputKey": {
+                                            "Type": "Fail"
+                                        },
+                                        "FailCheckInputObject": {
+                                            "Type": "Fail"
+                                        }
+                                    }
+                                }
+                            ],
+                            "InputPath": "$.S3",
+                            "ResultSelector": {
+                                "Bucket.$": "$[0]",
+                                "Object.$": "$[1]"
+                            },
+                            "Next": "HeadObject"
+                        },
+                        "HeadObject": {
+                            "Type": "Task",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket.Name",
+                                "Key.$": "$.Object.Key"
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
+                            "ResultPath": "$.Output",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.TaskFailed"
+                                    ],
+                                    "Next": "FailHeadObject"
+                                }
+                            ],
+                            "Next": "PassHeadObject"
+                        },
+                        "PassHeadObject": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket",
+                                "Object.$": "States.JsonMerge($.Object, $.Output, false)"
+                            },
+                            "Next": "GetObjectAttributes"
+                        },
+                        "GetObjectAttributes": {
+                            "Type": "Task",
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket.Name",
+                                "Key.$": "$.Object.Key",
+                                "ObjectAttributes": [
+                                    "Checksum",
+                                    "ETag",
+                                    "ObjectParts",
+                                    "ObjectSize",
+                                    "StorageClass"
+                                ]
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:s3:getObjectAttributes",
+                            "ResultPath": "$.Output",
+                            "Catch": [
+                                {
+                                    "ErrorEquals": [
+                                        "States.TaskFailed"
+                                    ],
+                                    "Next": "FailGetObjectAttributes"
+                                }
+                            ],
+                            "Next": "PassGetObjectAttributes"
+                        },
+                        "PassGetObjectAttributes": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "Bucket.$": "$.Bucket",
+                                "Object.$": "States.JsonMerge($.Object, $.Output, false)"
+                            }
+                        },
+                        "FailGetObjectAttributes": {
+                            "Type": "Fail"
+                        },
+                        "FailHeadObject": {
+                            "Type": "Fail"
+                        },
+                        "FailCheckS3Input": {
+                            "Type": "Fail"
+                        }
+                    }
+                }
+            ],
+            "Next": "DetectProtectiveEquipment",
+            "ResultSelector": {
+                "Rekognition.$": "$[0]",
+                "S3.$": "$[1]"
+            }
+        },
+        "DetectProtectiveEquipment": {
+            "Type": "Task",
+            "Parameters": {
+                "Image": {
+                    "S3Object": {
+                        "Bucket.$": "$.S3.Bucket.Name",
+                        "Name.$": "$.S3.Object.Key"
+                    }
+                }
+            },
+            "Resource": "arn:aws:states:::aws-sdk:rekognition:detectProtectiveEquipment",
+            "Next": "ParallelCheckOutputDetectProtectiveEquipment",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "Next": "FailDetectProtectiveEquipment"
+                }
+            ],
+            "ResultPath": "$.Output"
+        },
+        "ParallelCheckOutputDetectProtectiveEquipment": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "CheckOutputPersons",
+                    "States": {
+                        "CheckOutputPersons": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.Persons",
+                                    "IsPresent": true,
+                                    "Next": "MapOutputPersons"
+                                }
+                            ],
+                            "Default": "DefaultOutputPersons",
+                            "InputPath": "$.Output"
+                        },
+                        "MapOutputPersons": {
+                            "Type": "Map",
+                            "ItemProcessor": {
+                                "ProcessorConfig": {
+                                    "Mode": "INLINE"
+                                },
+                                "StartAt": "ParallelCheckOutputPerson",
+                                "States": {
+                                    "ParallelCheckOutputPerson": {
+                                        "Type": "Parallel",
+                                        "End": true,
+                                        "Branches": [
+                                            {
+                                                "StartAt": "CheckOutputPersonBodyParts",
+                                                "States": {
+                                                    "CheckOutputPersonBodyParts": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.BodyParts",
+                                                                "IsPresent": true,
+                                                                "Next": "MapOutputPersonBodyParts"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputPersonBodyParts"
+                                                    },
+                                                    "MapOutputPersonBodyParts": {
+                                                        "Type": "Map",
+                                                        "ItemProcessor": {
+                                                            "ProcessorConfig": {
+                                                                "Mode": "INLINE"
+                                                            },
+                                                            "StartAt": "ParallelCheckOutputPersonBodyPart",
+                                                            "States": {
+                                                                "ParallelCheckOutputPersonBodyPart": {
+                                                                    "Type": "Parallel",
+                                                                    "End": true,
+                                                                    "Branches": [
+                                                                        {
+                                                                            "StartAt": "CheckOutputPersonBodyPartConfidence",
+                                                                            "States": {
+                                                                                "CheckOutputPersonBodyPartConfidence": {
+                                                                                    "Type": "Choice",
+                                                                                    "Choices": [
+                                                                                        {
+                                                                                            "Variable": "$.Confidence",
+                                                                                            "IsPresent": true,
+                                                                                            "Next": "PassOutputPersonBodyPartConfidence"
+                                                                                        }
+                                                                                    ],
+                                                                                    "Default": "DefaultOutputPersonBodyPartConfidence"
+                                                                                },
+                                                                                "PassOutputPersonBodyPartConfidence": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "InputPath": "$.Confidence"
+                                                                                },
+                                                                                "DefaultOutputPersonBodyPartConfidence": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "Confidence": null
+                                                                                    },
+                                                                                    "OutputPath": "$.Confidence"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "CheckOutputPersonBodyPartEquipmentDetections",
+                                                                            "States": {
+                                                                                "CheckOutputPersonBodyPartEquipmentDetections": {
+                                                                                    "Type": "Choice",
+                                                                                    "Choices": [
+                                                                                        {
+                                                                                            "Variable": "$.EquipmentDetections",
+                                                                                            "IsPresent": true,
+                                                                                            "Next": "MapOutputPersonBodyPartEquipmentDetections"
+                                                                                        }
+                                                                                    ],
+                                                                                    "Default": "DefaultOutputPersonBodyPartEquipmentDetections"
+                                                                                },
+                                                                                "MapOutputPersonBodyPartEquipmentDetections": {
+                                                                                    "Type": "Map",
+                                                                                    "ItemProcessor": {
+                                                                                        "ProcessorConfig": {
+                                                                                            "Mode": "INLINE"
+                                                                                        },
+                                                                                        "StartAt": "ParallelCheckOutputPersonBodyPartEquipmentDetection",
+                                                                                        "States": {
+                                                                                            "ParallelCheckOutputPersonBodyPartEquipmentDetection": {
+                                                                                                "Type": "Parallel",
+                                                                                                "End": true,
+                                                                                                "Branches": [
+                                                                                                    {
+                                                                                                        "StartAt": "CheckOutputPersonBodyPartEquipmentDetectionBoundingBox",
+                                                                                                        "States": {
+                                                                                                            "CheckOutputPersonBodyPartEquipmentDetectionBoundingBox": {
+                                                                                                                "Type": "Choice",
+                                                                                                                "Choices": [
+                                                                                                                    {
+                                                                                                                        "Variable": "$.BoundingBox",
+                                                                                                                        "IsPresent": true,
+                                                                                                                        "Next": "PassOutputPersonBodyPartEquipmentDetectionBoundingBox"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                                "Default": "DefaultOutputPersonBodyPartEquipmentDetectionBoundingBox"
+                                                                                                            },
+                                                                                                            "PassOutputPersonBodyPartEquipmentDetectionBoundingBox": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true,
+                                                                                                                "InputPath": "$.BoundingBox"
+                                                                                                            },
+                                                                                                            "DefaultOutputPersonBodyPartEquipmentDetectionBoundingBox": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true,
+                                                                                                                "Parameters": {
+                                                                                                                    "BoundingBox": null
+                                                                                                                },
+                                                                                                                "OutputPath": "$.BoundingBox"
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "StartAt": "CheckOutputPersonBodyPartEquipmentDetectionConfidence",
+                                                                                                        "States": {
+                                                                                                            "CheckOutputPersonBodyPartEquipmentDetectionConfidence": {
+                                                                                                                "Type": "Choice",
+                                                                                                                "Choices": [
+                                                                                                                    {
+                                                                                                                        "Variable": "$.Confidence",
+                                                                                                                        "IsPresent": true,
+                                                                                                                        "Next": "PassOutputPersonBodyPartEquipmentDetectionConfidence"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                                "Default": "DefaultOutputPersonBodyPartEquipmentDetectionConfidence"
+                                                                                                            },
+                                                                                                            "PassOutputPersonBodyPartEquipmentDetectionConfidence": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true,
+                                                                                                                "InputPath": "$.Confidence"
+                                                                                                            },
+                                                                                                            "DefaultOutputPersonBodyPartEquipmentDetectionConfidence": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true,
+                                                                                                                "Parameters": {
+                                                                                                                    "Confidence": null
+                                                                                                                },
+                                                                                                                "OutputPath": "$.Confidence"
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "StartAt": "CheckOutputPersonBodyPartEquipmentDetectionCoversBodyPart",
+                                                                                                        "States": {
+                                                                                                            "CheckOutputPersonBodyPartEquipmentDetectionCoversBodyPart": {
+                                                                                                                "Type": "Choice",
+                                                                                                                "Choices": [
+                                                                                                                    {
+                                                                                                                        "Variable": "$.CoversBodyPart",
+                                                                                                                        "IsPresent": true,
+                                                                                                                        "Next": "PassOutputPersonBodyPartEquipmentDetectionCoversBodyPart"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                                "Default": "DefaultOutputPersonBodyPartEquipmentDetectionCoversBodyPart"
+                                                                                                            },
+                                                                                                            "PassOutputPersonBodyPartEquipmentDetectionCoversBodyPart": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true,
+                                                                                                                "InputPath": "$.CoversBodyPart"
+                                                                                                            },
+                                                                                                            "DefaultOutputPersonBodyPartEquipmentDetectionCoversBodyPart": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true,
+                                                                                                                "Parameters": {
+                                                                                                                    "CoversBodyPart": null
+                                                                                                                },
+                                                                                                                "OutputPath": "$.CoversBodyPart"
+                                                                                                            }
+                                                                                                        }
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "StartAt": "CheckOutputPersonBodyPartEquipmentDetectionType",
+                                                                                                        "States": {
+                                                                                                            "CheckOutputPersonBodyPartEquipmentDetectionType": {
+                                                                                                                "Type": "Choice",
+                                                                                                                "Choices": [
+                                                                                                                    {
+                                                                                                                        "Variable": "$.Type",
+                                                                                                                        "IsPresent": true,
+                                                                                                                        "Next": "PassOutputPersonBodyPartEquipmentDetectionType"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                                "Default": "DefaultOutputPersonBodyPartEquipmentDetectionType"
+                                                                                                            },
+                                                                                                            "PassOutputPersonBodyPartEquipmentDetectionType": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true,
+                                                                                                                "InputPath": "$.Type"
+                                                                                                            },
+                                                                                                            "DefaultOutputPersonBodyPartEquipmentDetectionType": {
+                                                                                                                "Type": "Pass",
+                                                                                                                "End": true,
+                                                                                                                "Parameters": {
+                                                                                                                    "Type": null
+                                                                                                                },
+                                                                                                                "OutputPath": "$.Type"
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                ],
+                                                                                                "ResultSelector": {
+                                                                                                    "BoundingBox.$": "$[0]",
+                                                                                                    "Confidence.$": "$[1]",
+                                                                                                    "CoversBodyPart.$": "$[2]",
+                                                                                                    "Type.$": "$[3]"
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    "End": true,
+                                                                                    "ItemsPath": "$.EquipmentDetections"
+                                                                                },
+                                                                                "DefaultOutputPersonBodyPartEquipmentDetections": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "EquipmentDetections": null
+                                                                                    },
+                                                                                    "OutputPath": "$.EquipmentDetections"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "StartAt": "CheckOutputPersonBodyPartName",
+                                                                            "States": {
+                                                                                "CheckOutputPersonBodyPartName": {
+                                                                                    "Type": "Choice",
+                                                                                    "Choices": [
+                                                                                        {
+                                                                                            "Variable": "$.Name",
+                                                                                            "IsPresent": true,
+                                                                                            "Next": "PassOutputPersonBodyPartName"
+                                                                                        }
+                                                                                    ],
+                                                                                    "Default": "DefaultOutputPersonBodyPartName"
+                                                                                },
+                                                                                "PassOutputPersonBodyPartName": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "InputPath": "$.Name"
+                                                                                },
+                                                                                "DefaultOutputPersonBodyPartName": {
+                                                                                    "Type": "Pass",
+                                                                                    "End": true,
+                                                                                    "Parameters": {
+                                                                                        "Name": null
+                                                                                    },
+                                                                                    "OutputPath": "$.Name"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "ResultSelector": {
+                                                                        "Confidence.$": "$[0]",
+                                                                        "EquipmentDetections.$": "$[1]",
+                                                                        "Name.$": "$[2]"
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "End": true,
+                                                        "ItemsPath": "$.BodyParts"
+                                                    },
+                                                    "DefaultOutputPersonBodyParts": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "BodyParts": null
+                                                        },
+                                                        "OutputPath": "$.BodyParts"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckOutputPersonBoundingBox",
+                                                "States": {
+                                                    "CheckOutputPersonBoundingBox": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.BoundingBox",
+                                                                "IsPresent": true,
+                                                                "Next": "PassOutputPersonBoundingBox"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputPersonBoundingBox"
+                                                    },
+                                                    "PassOutputPersonBoundingBox": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.BoundingBox"
+                                                    },
+                                                    "DefaultOutputPersonBoundingBox": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "BoundingBox": null
+                                                        },
+                                                        "OutputPath": "$.BoundingBox"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckOutputPersonConfidence",
+                                                "States": {
+                                                    "CheckOutputPersonConfidence": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Confidence",
+                                                                "IsPresent": true,
+                                                                "Next": "PassOutputPersonConfidence"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputPersonConfidence"
+                                                    },
+                                                    "PassOutputPersonConfidence": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Confidence"
+                                                    },
+                                                    "DefaultOutputPersonConfidence": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Confidence": null
+                                                        },
+                                                        "OutputPath": "$.Confidence"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "StartAt": "CheckOutputPersonId",
+                                                "States": {
+                                                    "CheckOutputPersonId": {
+                                                        "Type": "Choice",
+                                                        "Choices": [
+                                                            {
+                                                                "Variable": "$.Id",
+                                                                "IsPresent": true,
+                                                                "Next": "PassOutputPersonId"
+                                                            }
+                                                        ],
+                                                        "Default": "DefaultOutputPersonId"
+                                                    },
+                                                    "PassOutputPersonId": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "InputPath": "$.Id"
+                                                    },
+                                                    "DefaultOutputPersonId": {
+                                                        "Type": "Pass",
+                                                        "End": true,
+                                                        "Parameters": {
+                                                            "Id": null
+                                                        },
+                                                        "OutputPath": "$.Id"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "ResultSelector": {
+                                            "BodyParts.$": "$[0]",
+                                            "BoundingBox.$": "$[1]",
+                                            "Confidence.$": "$[2]",
+                                            "Id.$": "$[3]"
+                                        }
+                                    }
+                                }
+                            },
+                            "End": true,
+                            "ItemsPath": "$.Persons"
+                        },
+                        "DefaultOutputPersons": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "Persons": null
+                            },
+                            "OutputPath": "$.Persons"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputOrientationCorrection",
+                    "States": {
+                        "CheckOutputOrientationCorrection": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.OrientationCorrection",
+                                    "IsPresent": true,
+                                    "Next": "PassOutputOrientationCorrection"
+                                }
+                            ],
+                            "Default": "DefaultOutputOrientationCorrection",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOutputOrientationCorrection": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.OrientationCorrection"
+                        },
+                        "DefaultOutputOrientationCorrection": {
+                            "Type": "Pass",
+                            "Parameters": {
+                                "OrientationCorrection": null
+                            },
+                            "Next": "PassOutputOrientationCorrection"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputProtectiveEquipmentModelVersion",
+                    "States": {
+                        "CheckOutputProtectiveEquipmentModelVersion": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.ProtectiveEquipmentModelVersion",
+                                    "IsPresent": true,
+                                    "Next": "PassOutputProtectiveEquipmentModelVersion"
+                                }
+                            ],
+                            "Default": "DefaultOutputProtectiveEquipmentModelVersion",
+                            "InputPath": "$.Output"
+                        },
+                        "PassOutputProtectiveEquipmentModelVersion": {
+                            "Type": "Pass",
+                            "End": true,
+                            "InputPath": "$.ProtectiveEquipmentModelVersion"
+                        },
+                        "DefaultOutputProtectiveEquipmentModelVersion": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "ProtectiveEquipmentModelVersion": null
+                            },
+                            "OutputPath": "$.ProtectiveEquipmentModelVersion"
+                        }
+                    }
+                },
+                {
+                    "StartAt": "CheckOutputSummary",
+                    "States": {
+                        "CheckOutputSummary": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.Summary",
+                                    "IsPresent": true,
+                                    "Next": "ParallelCheckOutputSummary"
+                                }
+                            ],
+                            "Default": "DefaultOutputSummary",
+                            "InputPath": "$.Output"
+                        },
+                        "ParallelCheckOutputSummary": {
+                            "Type": "Parallel",
+                            "End": true,
+                            "Branches": [
+                                {
+                                    "StartAt": "CheckOutputSummaryPersonsIndeterminate",
+                                    "States": {
+                                        "CheckOutputSummaryPersonsIndeterminate": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.PersonsIndeterminate",
+                                                    "IsPresent": true,
+                                                    "Next": "PassOutputSummaryPersonsIndeterminate"
+                                                }
+                                            ],
+                                            "Default": "DefaultOutputSummaryPersonsIndeterminate"
+                                        },
+                                        "PassOutputSummaryPersonsIndeterminate": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.PersonsIndeterminate"
+                                        },
+                                        "DefaultOutputSummaryPersonsIndeterminate": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "PersonsIndeterminate": null
+                                            },
+                                            "OutputPath": "$.PersonsIndeterminate"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckOutputSummaryPersonsWithoutRequiredEquipment",
+                                    "States": {
+                                        "CheckOutputSummaryPersonsWithoutRequiredEquipment": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.PersonsWithoutRequiredEquipment",
+                                                    "IsPresent": true,
+                                                    "Next": "PassOutputSummaryPersonsWithoutRequiredEquipment"
+                                                }
+                                            ],
+                                            "Default": "DefaultOutputSummaryPersonsWithoutRequiredEquipment"
+                                        },
+                                        "PassOutputSummaryPersonsWithoutRequiredEquipment": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.PersonsWithoutRequiredEquipment"
+                                        },
+                                        "DefaultOutputSummaryPersonsWithoutRequiredEquipment": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "PersonsWithoutRequiredEquipment": null
+                                            },
+                                            "OutputPath": "$.PersonsWithoutRequiredEquipment"
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "CheckOutputSummaryPersonsWithRequiredEquipment",
+                                    "States": {
+                                        "CheckOutputSummaryPersonsWithRequiredEquipment": {
+                                            "Type": "Choice",
+                                            "Choices": [
+                                                {
+                                                    "Variable": "$.PersonsWithRequiredEquipment",
+                                                    "IsPresent": true,
+                                                    "Next": "PassOutputSummaryPersonsWithRequiredEquipment"
+                                                }
+                                            ],
+                                            "Default": "DefaultOutputSummaryPersonsWithRequiredEquipment"
+                                        },
+                                        "PassOutputSummaryPersonsWithRequiredEquipment": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "InputPath": "$.PersonsWithRequiredEquipment"
+                                        },
+                                        "DefaultOutputSummaryPersonsWithRequiredEquipment": {
+                                            "Type": "Pass",
+                                            "End": true,
+                                            "Parameters": {
+                                                "PersonsWithRequiredEquipment": null
+                                            },
+                                            "OutputPath": "$.PersonsWithRequiredEquipment"
+                                        }
+                                    }
+                                }
+                            ],
+                            "ResultSelector": {
+                                "PersonsIndeterminate.$": "$[0]",
+                                "PersonsWithoutRequiredEquipment.$": "$[1]",
+                                "PersonsWithRequiredEquipment.$": "$[2]"
+                            }
+                        },
+                        "DefaultOutputSummary": {
+                            "Type": "Pass",
+                            "End": true,
+                            "Parameters": {
+                                "Summary": null
+                            },
+                            "OutputPath": "$.Summary"
+                        }
+                    }
+                }
+            ],
+            "ResultSelector": {
+                "Persons.$": "$[0]",
+                "OrientationCorrection.$": "$[1]",
+                "ProtectiveEquipmentModelVersion.$": "$[2]",
+                "Summary.$": "$[3]"
+            },
+            "ResultPath": "$.Output",
+            "Next": "StateMachineOutput"
+        },
+        "StateMachineOutput": {
+            "Type": "Pass",
+            "End": true,
+            "Parameters": {
+                "DetectProtectiveEquipment": {
+                    "CreatedAt.$": "$$.Execution.StartTime",
+                    "Id.$": "$.S3.Object.ETag",
+                    "OrientationCorrection.$": "$.Output.OrientationCorrection",
+                    "Persons.$": "$.Output.Persons",
+                    "ProtectiveEquipmentModelVersion.$": "$.Output.ProtectiveEquipmentModelVersion",
+                    "Summary.$": "$.Output.Summary"
+                },
+                "Execution": {
+                    "Id.$": "$$.Execution.Id",
+                    "Name.$": "$$.Execution.Name",
+                    "StartTime.$": "$$.Execution.StartTime"
+                },
+                "S3.$": "$.S3",
+                "StateMachine.$": "$$.StateMachine"
+            }
+        },
+        "FailDetectProtectiveEquipment": {
+            "Type": "Fail"
+        }
+    }
+}

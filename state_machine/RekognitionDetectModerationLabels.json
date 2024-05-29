@@ -75,8 +75,18 @@
                                             "Type": "Choice",
                                             "Choices": [
                                                 {
-                                                    "Variable": "$.HumanLoopConfig",
-                                                    "IsPresent": true,
+                                                    "And": [
+                                                        {
+                                                            "Variable": "$.HumanLoopConfig",
+                                                            "IsPresent": true
+                                                        },
+                                                        {
+                                                            "Not": {
+                                                                "Variable": "$.HumanLoopConfig",
+                                                                "IsNull": true
+                                                            }
+                                                        }
+                                                    ],
                                                     "Next": "ParallelCheckHumanLoopConfig"
                                                 }
                                             ],
@@ -93,8 +103,18 @@
                                                             "Type": "Choice",
                                                             "Choices": [
                                                                 {
-                                                                    "Variable": "$.DataAttributes",
-                                                                    "IsPresent": true,
+                                                                    "And": [
+                                                                        {
+                                                                            "Variable": "$.DataAttributes",
+                                                                            "IsPresent": true
+                                                                        },
+                                                                        {
+                                                                            "Not": {
+                                                                                "Variable": "$.DataAttributes",
+                                                                                "IsNull": true
+                                                                            }
+                                                                        }
+                                                                    ],
                                                                     "Next": "ParallelCheckInputHumanLoopConfigDataAttributes"
                                                                 }
                                                             ],
@@ -111,8 +131,18 @@
                                                                             "Type": "Choice",
                                                                             "Choices": [
                                                                                 {
-                                                                                    "Variable": "$.ContentClassifiers",
-                                                                                    "IsPresent": true,
+                                                                                    "And": [
+                                                                                        {
+                                                                                            "Variable": "$.ContentClassifiers",
+                                                                                            "IsPresent": true
+                                                                                        },
+                                                                                        {
+                                                                                            "Not": {
+                                                                                                "Variable": "$.ContentClassifiers",
+                                                                                                "IsNull": true
+                                                                                            }
+                                                                                        }
+                                                                                    ],
                                                                                     "Next": "MapInputHumanLoopConfigDataAttributesContentClassifiers"
                                                                                 }
                                                                             ],
@@ -161,7 +191,8 @@
                                                             ],
                                                             "ResultSelector": {
                                                                 "ContentClassifiers.$": "$[0]"
-                                                            }
+                                                            },
+                                                            "InputPath": "$.DataAttributes"
                                                         },
                                                         "DefaultInputHumanLoopConfigDataAttributes": {
                                                             "Type": "Pass",
@@ -237,20 +268,19 @@
                                                     }
                                                 }
                                             ],
-                                            "InputPath": "$.HumanLoopConfig",
                                             "ResultSelector": {
                                                 "DataAttributes.$": "$[0]",
                                                 "FlowDefinitionArn.$": "$[1]",
                                                 "HumanLoopName.$": "$[2]"
-                                            }
+                                            },
+                                            "InputPath": "$.HumanLoopConfig"
                                         },
                                         "DefaultInputHumanLoopConfig": {
                                             "Type": "Pass",
                                             "Parameters": {
-                                                "HumanLoopConfig": {}
+                                                "HumanLoopConfig": null
                                             },
-                                            "OutputPath": "$.HumanLoopConfig",
-                                            "Next": "ParallelCheckHumanLoopConfig"
+                                            "End": true
                                         }
                                     }
                                 },
