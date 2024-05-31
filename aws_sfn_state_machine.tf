@@ -1,3 +1,31 @@
+resource "aws_sfn_state_machine" "rekognition" {
+  definition = templatefile("./state_machine/Rekognition.json", {
+    rekognition_detect_faces                          = aws_sfn_state_machine.rekognition_detect_faces.arn
+    rekognition_detect_labels                         = aws_sfn_state_machine.rekognition_detect_labels.arn
+    rekognition_detect_moderation_labels              = aws_sfn_state_machine.rekognition_detect_moderation_labels.arn
+    rekognition_detect_protective_equipment           = aws_sfn_state_machine.rekognition_detect_protective_equipment.arn
+    rekognition_detect_text                           = aws_sfn_state_machine.rekognition_detect_text.arn
+    s3_object_rekognition_detect_faces                = aws_s3_object.rekognition_detect_faces.key
+    s3_object_rekognition_detect_labels               = aws_s3_object.rekognition_detect_labels.key
+    s3_object_rekognition_detect_moderation_labels    = aws_s3_object.rekognition_detect_moderation_labels.key
+    s3_object_rekognition_detect_protective_equipment = aws_s3_object.rekognition_detect_protective_equipment.key
+    s3_object_rekognition_detect_text                 = aws_s3_object.rekognition_detect_text.key
+  })
+  name     = "rekognition"
+  role_arn = aws_iam_role.sfn_state_machine_rekognition.arn
+  tags = {
+    bucket                      = aws_s3_bucket.main.bucket
+    bucket_key                  = aws_s3_object.images.key
+    caller_identity_account_arn = data.aws_caller_identity.main.arn
+    caller_identity_account_id  = data.aws_caller_identity.main.account_id
+    caller_identity_user_id     = data.aws_caller_identity.main.user_id
+    canonical_user_id           = data.aws_canonical_user_id.main.id
+    organization                = local.organization
+    region                      = data.aws_region.main.name
+    workspace                   = terraform.workspace
+  }
+}
+
 resource "aws_sfn_state_machine" "rekognition_detect_faces" {
   definition = templatefile("./state_machine/RekognitionDetectFaces.json", {})
   name       = "rekognition-detect-faces"

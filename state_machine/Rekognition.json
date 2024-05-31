@@ -1,0 +1,349 @@
+{
+    "StartAt": "Map",
+    "States": {
+        "Map": {
+            "Type": "Map",
+            "ItemProcessor": {
+                "ProcessorConfig": {
+                    "Mode": "INLINE"
+                },
+                "StartAt": "CheckEventSource",
+                "States": {
+                    "CheckEventSource": {
+                        "Type": "Choice",
+                        "Choices": [
+                            {
+                                "And": [
+                                    {
+                                        "Variable": "$.eventSource",
+                                        "IsPresent": true
+                                    },
+                                    {
+                                        "Variable": "$.eventSource",
+                                        "IsString": true
+                                    },
+                                    {
+                                        "Variable": "$.eventSource",
+                                        "StringEquals": "aws:sqs"
+                                    }
+                                ],
+                                "Next": "CheckBody"
+                            }
+                        ],
+                        "Default": "SuccessCheckEventSource"
+                    },
+                    "CheckBody": {
+                        "Type": "Choice",
+                        "Choices": [
+                            {
+                                "And": [
+                                    {
+                                        "Variable": "$.body",
+                                        "IsPresent": true
+                                    },
+                                    {
+                                        "Variable": "$.body",
+                                        "IsString": true
+                                    }
+                                ],
+                                "Next": "PassBody"
+                            }
+                        ],
+                        "Default": "SuccessCheckBody"
+                    },
+                    "PassBody": {
+                        "Type": "Pass",
+                        "Parameters": {
+                            "body.$": "States.StringToJson($.body)"
+                        },
+                        "Next": "CheckBodyRecords"
+                    },
+                    "CheckBodyRecords": {
+                        "Type": "Choice",
+                        "Choices": [
+                            {
+                                "Variable": "$.Records",
+                                "IsPresent": true,
+                                "Next": "MapBodyRecords"
+                            }
+                        ],
+                        "Default": "SuccessCheckBodyRecords",
+                        "InputPath": "$.body"
+                    },
+                    "MapBodyRecords": {
+                        "Type": "Map",
+                        "ItemProcessor": {
+                            "ProcessorConfig": {
+                                "Mode": "INLINE"
+                            },
+                            "StartAt": "CheckBodyRecordEventSource",
+                            "States": {
+                                "CheckBodyRecordEventSource": {
+                                    "Type": "Choice",
+                                    "Choices": [
+                                        {
+                                            "And": [
+                                                {
+                                                    "Variable": "$.eventSource",
+                                                    "IsPresent": true
+                                                },
+                                                {
+                                                    "Variable": "$.eventSource",
+                                                    "IsString": true
+                                                },
+                                                {
+                                                    "Variable": "$.eventSource",
+                                                    "StringEquals": "aws:s3"
+                                                }
+                                            ],
+                                            "Next": "CheckBodyRecordEventName"
+                                        }
+                                    ],
+                                    "Default": "SuccessCheckBodyRecordEventSource"
+                                },
+                                "CheckBodyRecordEventName": {
+                                    "Type": "Choice",
+                                    "Choices": [
+                                        {
+                                            "And": [
+                                                {
+                                                    "Variable": "$.eventName",
+                                                    "IsPresent": true
+                                                },
+                                                {
+                                                    "Variable": "$.eventName",
+                                                    "IsString": true
+                                                },
+                                                {
+                                                    "Or": [
+                                                        {
+                                                            "Variable": "$.eventName",
+                                                            "StringEquals": "ObjectCreated:CompleteMultipartUpload"
+                                                        },
+                                                        {
+                                                            "Variable": "$.eventName",
+                                                            "StringEquals": "ObjectCreated:Copy"
+                                                        },
+                                                        {
+                                                            "Variable": "$.eventName",
+                                                            "StringEquals": "ObjectCreated:Post"
+                                                        },
+                                                        {
+                                                            "Variable": "$.eventName",
+                                                            "StringEquals": "ObjectCreated:Put"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "Next": "CheckBodyRecordS3"
+                                        }
+                                    ],
+                                    "Default": "SuccessCheckBodyRecordEventName"
+                                },
+                                "CheckBodyRecordS3": {
+                                    "Type": "Choice",
+                                    "Choices": [
+                                        {
+                                            "Variable": "$.s3",
+                                            "IsPresent": true,
+                                            "Next": "PassBodyRecordS3"
+                                        }
+                                    ],
+                                    "Default": "Success"
+                                },
+                                "PassBodyRecordS3": {
+                                    "Type": "Pass",
+                                    "InputPath": "$.s3",
+                                    "Next": "ParallelRekognitionStateMachines"
+                                },
+                                "ParallelRekognitionStateMachines": {
+                                    "Type": "Parallel",
+                                    "End": true,
+                                    "Branches": [
+                                        {
+                                            "StartAt": "StartExecutionRekognitionDetectFaces",
+                                            "States": {
+                                                "StartExecutionRekognitionDetectFaces": {
+                                                    "Type": "Task",
+                                                    "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                                                    "Parameters": {
+                                                        "StateMachineArn": "${rekognition_detect_faces}",
+                                                        "Input": {
+                                                            "StatePayload.$": "$",
+                                                            "TaskToken.$": "$$.Task.Token",
+                                                            "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+                                                        }
+                                                    },
+                                                    "Next": "PutObjectRekognitionDetectFaces",
+                                                    "OutputPath": "$.Output"
+                                                },
+                                                "PutObjectRekognitionDetectFaces": {
+                                                    "Type": "Task",
+                                                    "Parameters": {
+                                                        "Body.$": "$",
+                                                        "Bucket.$": "$.S3.Bucket.Name",
+                                                        "Key.$": "States.Format('${s3_object_rekognition_detect_faces}{}.json', $.S3.Object.ETag)"
+                                                    },
+                                                    "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+                                                    "End": true
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "StartAt": "StartExecutionRekognitionDetectLabels",
+                                            "States": {
+                                                "StartExecutionRekognitionDetectLabels": {
+                                                    "Type": "Task",
+                                                    "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                                                    "Parameters": {
+                                                        "StateMachineArn": "${rekognition_detect_labels}",
+                                                        "Input": {
+                                                            "StatePayload.$": "$",
+                                                            "TaskToken.$": "$$.Task.Token",
+                                                            "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+                                                        }
+                                                    },
+                                                    "Next": "PutObjectRekognitionDetectLabels",
+                                                    "OutputPath": "$.Output"
+                                                },
+                                                "PutObjectRekognitionDetectLabels": {
+                                                    "Type": "Task",
+                                                    "Parameters": {
+                                                        "Body.$": "$",
+                                                        "Bucket.$": "$.S3.Bucket.Name",
+                                                        "Key.$": "States.Format('${s3_object_rekognition_detect_labels}{}.json', $.S3.Object.ETag)"
+                                                    },
+                                                    "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+                                                    "End": true
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "StartAt": "StartExecutionRekognitionDetectModerationLabels",
+                                            "States": {
+                                                "StartExecutionRekognitionDetectModerationLabels": {
+                                                    "Type": "Task",
+                                                    "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                                                    "Parameters": {
+                                                        "StateMachineArn": "${rekognition_detect_moderation_labels}",
+                                                        "Input": {
+                                                            "StatePayload.$": "$",
+                                                            "TaskToken.$": "$$.Task.Token",
+                                                            "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+                                                        }
+                                                    },
+                                                    "Next": "PutObjectDetectModerationLabels",
+                                                    "OutputPath": "$.Output"
+                                                },
+                                                "PutObjectDetectModerationLabels": {
+                                                    "Type": "Task",
+                                                    "Parameters": {
+                                                        "Body.$": "$",
+                                                        "Bucket.$": "$.S3.Bucket.Name",
+                                                        "Key.$": "States.Format('${s3_object_rekognition_detect_moderation_labels}{}.json', $.S3.Object.ETag)"
+                                                    },
+                                                    "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+                                                    "End": true
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "StartAt": "StartExecutionRekognitionDetectProtectiveEquipment",
+                                            "States": {
+                                                "StartExecutionRekognitionDetectProtectiveEquipment": {
+                                                    "Type": "Task",
+                                                    "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                                                    "Parameters": {
+                                                        "StateMachineArn": "${rekognition_detect_protective_equipment}",
+                                                        "Input": {
+                                                            "StatePayload.$": "$",
+                                                            "TaskToken.$": "$$.Task.Token",
+                                                            "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+                                                        }
+                                                    },
+                                                    "Next": "PutObjectRekognitionDetectProtectiveEquipment",
+                                                    "OutputPath": "$.Output"
+                                                },
+                                                "PutObjectRekognitionDetectProtectiveEquipment": {
+                                                    "Type": "Task",
+                                                    "Parameters": {
+                                                        "Body.$": "$",
+                                                        "Bucket.$": "$.S3.Bucket.Name",
+                                                        "Key.$": "States.Format('${s3_object_rekognition_detect_protective_equipment}{}.json', $.S3.Object.ETag)"
+                                                    },
+                                                    "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+                                                    "End": true
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "StartAt": "StartExecutionRekognitionDetectText",
+                                            "States": {
+                                                "StartExecutionRekognitionDetectText": {
+                                                    "Type": "Task",
+                                                    "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                                                    "Parameters": {
+                                                        "StateMachineArn": "${rekognition_detect_text}",
+                                                        "Input": {
+                                                            "StatePayload.$": "$",
+                                                            "TaskToken.$": "$$.Task.Token",
+                                                            "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+                                                        }
+                                                    },
+                                                    "Next": "PutObjectRekognitionDetectText",
+                                                    "OutputPath": "$.Output"
+                                                },
+                                                "PutObjectRekognitionDetectText": {
+                                                    "Type": "Task",
+                                                    "Parameters": {
+                                                        "Body.$": "$",
+                                                        "Bucket.$": "$.S3.Bucket.Name",
+                                                        "Key.$": "States.Format('${s3_object_rekognition_detect_text}{}.json', $.S3.Object.ETag)"
+                                                    },
+                                                    "Resource": "arn:aws:states:::aws-sdk:s3:putObject",
+                                                    "End": true
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "Parameters": {
+                                        "S3": {
+                                            "Bucket": {
+                                                "Name.$": "$.bucket.name"
+                                            },
+                                            "Object": {
+                                                "Key.$": "$.object.key"
+                                            }
+                                        }
+                                    }
+                                },
+                                "Success": {
+                                    "Type": "Succeed"
+                                },
+                                "SuccessCheckBodyRecordEventName": {
+                                    "Type": "Succeed"
+                                },
+                                "SuccessCheckBodyRecordEventSource": {
+                                    "Type": "Succeed"
+                                }
+                            }
+                        },
+                        "End": true,
+                        "ItemsPath": "$.Records"
+                    },
+                    "SuccessCheckBodyRecords": {
+                        "Type": "Succeed"
+                    },
+                    "SuccessCheckBody": {
+                        "Type": "Succeed"
+                    },
+                    "SuccessCheckEventSource": {
+                        "Type": "Succeed"
+                    }
+                }
+            },
+            "End": true,
+            "ItemsPath": "$"
+        }
+    }
+}

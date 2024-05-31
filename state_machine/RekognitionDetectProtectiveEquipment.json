@@ -1,6 +1,25 @@
 {
-    "StartAt": "ParallelCheckInput",
+    "StartAt": "CheckInvoker",
     "States": {
+        "CheckInvoker": {
+            "Type": "Choice",
+            "Choices": [
+                {
+                    "Variable": "$.StatePayload",
+                    "IsPresent": true,
+                    "Next": "InvokerStateMachine"
+                }
+            ],
+            "Default": "Fail"
+        },
+        "InvokerStateMachine": {
+            "Type": "Pass",
+            "Next": "ParallelCheckInput",
+            "InputPath": "$.StatePayload"
+        },
+        "Fail": {
+            "Type": "Fail"
+        },
         "ParallelCheckInput": {
             "Type": "Parallel",
             "Branches": [
@@ -1090,7 +1109,6 @@
         },
         "StateMachineOutput": {
             "Type": "Pass",
-            "End": true,
             "Parameters": {
                 "DetectProtectiveEquipment": {
                     "CreatedAt.$": "$$.Execution.StartTime",
@@ -1107,7 +1125,11 @@
                 },
                 "S3.$": "$.S3",
                 "StateMachine.$": "$$.StateMachine"
-            }
+            },
+            "Next": "Success"
+        },
+        "Success": {
+            "Type": "Succeed"
         },
         "FailDetectProtectiveEquipment": {
             "Type": "Fail"
