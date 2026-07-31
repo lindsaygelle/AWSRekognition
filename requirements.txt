@@ -1,7 +1,7 @@
 cfgv==3.5.0
 distlib==0.4.3
 identify==2.6.19
-filelock==3.29.5
+filelock==3.29.7
 nodeenv==1.10.0
 platformdirs==4.10.0
 pre-commit==4.6.0
